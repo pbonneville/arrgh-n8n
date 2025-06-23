@@ -23,8 +23,10 @@ data:
   
   # Email configuration (AWS SES)
   N8N_EMAIL_MODE: "smtp"
-  N8N_SMTP_HOST: "email-smtp.us-west-2.amazonaws.com"  # Change to your SES region
+  N8N_SMTP_HOST: "email-smtp.us-east-1.amazonaws.com"
   N8N_SMTP_PORT: "587"
   N8N_SMTP_SSL: "false"
   N8N_SMTP_STARTTLS: "true"
-  N8N_DEFAULT_EMAIL: "paul@paulbonneville.com"  # Verified email address
+  N8N_DEFAULT_EMAIL: "paul@paulbonneville.com"
+  N8N_DEFAULT_EMAIL_FROM_NAME: "n8n"
+  N8N_SMTP_SENDER: "paul@paulbonneville.com"
