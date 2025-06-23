@@ -47,6 +47,16 @@ spec:
             secretKeyRef:
               name: n8n-secrets
               key: DB_POSTGRESDB_PASSWORD
+        - name: N8N_SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: N8N_SMTP_USER
+        - name: N8N_SMTP_PASS
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: N8N_SMTP_PASS
         livenessProbe:
           httpGet:
             path: /healthz
