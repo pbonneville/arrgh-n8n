@@ -190,9 +190,50 @@ Success Response
 5. **IAM Permissions**: n8n needs S3 read access
 
 ### n8n Configuration
-1. **AWS Credentials**: Configured in n8n for S3 access
+
+#### 1. AWS Credentials Setup
+Before importing the workflow, you must configure AWS credentials in n8n:
+
+1. **Create AWS Credential**:
+   - Go to n8n Settings → Credentials
+   - Add new credential of type "AWS"
+   - Enter your AWS Access Key ID and Secret Access Key
+   - Name the credential (e.g., "AWS S3 Access")
+
+2. **Required Permissions**:
+   Your AWS credentials need S3 read access to the email bucket:
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": [
+           "s3:GetObject"
+         ],
+         "Resource": "arn:aws:s3:::n8n-inbound-emails-production/*"
+       }
+     ]
+   }
+   ```
+
+3. **Environment Variable (Optional)**:
+   Set the credential name as an environment variable:
+   ```bash
+   export AWS_CREDENTIALS_NAME="AWS S3 Access"
+   ```
+
+#### 2. Workflow Import
+After importing the workflow JSON, you'll need to:
+1. **Configure AWS Credential Reference**: 
+   - Edit the "Download Email from S3" node
+   - Set the credential to your AWS credential name
+   - Or ensure `$vars.AWS_CREDENTIALS_NAME` points to your credential
+
 2. **Webhook Endpoint**: Publicly accessible at the configured URL
 3. **Workflow Activation**: Workflow must be active to receive webhooks
+
+**⚠️ Security Note**: The workflow JSON file does not contain actual credentials - only references to credentials stored securely in n8n.
 
 ## Customization Guide
 

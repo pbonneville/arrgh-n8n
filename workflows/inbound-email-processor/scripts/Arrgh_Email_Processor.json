@@ -107,10 +107,7 @@
         260
       ],
       "credentials": {
-        "aws": {
-          "id": "pex7iOrrjZtJ7qua",
-          "name": "AWS account"
-        }
+        "aws": "{{$vars.AWS_CREDENTIALS_NAME}}"
       }
     },
     {
