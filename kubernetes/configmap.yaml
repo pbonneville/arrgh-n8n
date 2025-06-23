@@ -20,3 +20,10 @@ data:
   DB_POSTGRESDB_DATABASE: "n8n"
   DB_POSTGRESDB_USER: "postgres"
   DB_POSTGRESDB_SSL_ENABLED: "false"
+  
+  # Email configuration (AWS SES)
+  N8N_EMAIL_MODE: "smtp"
+  N8N_SMTP_HOST: "email-smtp.us-west-2.amazonaws.com"  # Change to your SES region
+  N8N_SMTP_PORT: "587"
+  N8N_SMTP_SSL: "true"
+  N8N_DEFAULT_EMAIL: "paul@paulbonneville.com"  # Verified email address
