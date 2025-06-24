@@ -17,14 +17,13 @@ The email processing system uses the following AWS services:
 - **Purpose**: Stores received emails temporarily
 - **Configuration**:
   - Lifecycle policy: Auto-delete emails after 30 days
-  - Encryption: Server-side encryption enabled
   - Access: Restricted to SES service only
+  - Block public access enabled
 
 ### 3. Amazon SNS Topic
 - **Purpose**: Sends notifications to n8n webhook when emails arrive
 - **Configuration**:
   - HTTPS subscription to n8n webhook endpoint
-  - Delivery retry policy configured
 
 ### 4. IAM Roles and Policies
 - **SES Role**: Allows SES to write to S3 and publish to SNS
@@ -38,10 +37,12 @@ To set up this infrastructure, you need:
    - Add MX record pointing to SES endpoint (see dns-mx-setup.md)
    - Verify domain ownership in SES
 
-2. **Environment Variables** (see .env.example):
+2. **Environment Variables**:
    - `EMAIL_DOMAIN`: Your verified domain
    - `EMAIL_SUBDOMAIN`: Subdomain for receiving emails
    - `N8N_WEBHOOK_URL`: Your n8n webhook endpoint
+   
+   See `workflows/arrgh-email-processor/local-development/.env.example` for a complete example.
 
 ## Infrastructure as Code
 
