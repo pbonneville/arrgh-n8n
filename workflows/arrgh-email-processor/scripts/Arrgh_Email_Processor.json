@@ -74,7 +74,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Parse the SNS message to extract email metadata\nconst message = JSON.parse($json.Message);\n\n// Extract email details from SES notification\nconst emailData = {\n  messageId: message.mail.messageId,\n  timestamp: message.mail.timestamp,\n  source: message.mail.source,\n  destination: message.mail.destination,\n  commonHeaders: message.mail.commonHeaders,\n  receipt: message.receipt,\n  s3Bucket: message.receipt.action.bucketName,\n  s3ObjectKey: message.receipt.action.objectKey\n};\n\nreturn emailData;"
+        "jsCode": "// Parse the SNS message to extract email metadata\n// First parse the webhook body, then extract the Message field\nconst snsBody = typeof $json.body === 'string' ? JSON.parse($json.body) : $json.body;\nconst message = JSON.parse(snsBody.Message);\n\n// Extract email details from SES notification\nconst emailData = {\n  messageId: message.mail.messageId,\n  timestamp: message.mail.timestamp,\n  source: message.mail.source,\n  destination: message.mail.destination,\n  commonHeaders: message.mail.commonHeaders,\n  receipt: message.receipt,\n  s3Bucket: message.receipt.action.bucketName,\n  s3ObjectKey: message.receipt.action.objectKey\n};\n\nreturn emailData;"
       },
       "id": "ab789de3-8189-4ad2-8997-93c93b8512d7",
       "name": "Parse Email Metadata",

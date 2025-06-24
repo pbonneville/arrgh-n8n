@@ -1,0 +1,49 @@
+# Local Development Environment Requirements
+# These packages enable full LangChain/LangGraph development locally
+
+# Core LangChain and LangGraph
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-community>=0.0.10
+langgraph>=0.0.40
+langchain-anthropic>=0.1.0
+langchain-openai>=0.1.0
+langchain-google-genai>=0.1.0
+
+# Data processing and analysis
+pandas>=2.0.0
+numpy>=1.24.0
+email-validator>=2.0.0
+python-email>=0.0.2
+email-reply-parser>=0.5.12
+
+# Development and testing
+jupyter>=1.0.0
+ipykernel>=6.20.0
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+python-dotenv>=1.0.0
+
+# n8n simulation and utilities
+requests>=2.28.0
+httpx>=0.24.0
+aiohttp>=3.8.0
+pydantic>=2.0.0
+typing-extensions>=4.5.0
+
+# Utilities for email processing
+beautifulsoup4>=4.12.0
+html2text>=2020.1.16
+python-dateutil>=2.8.0
+pytz>=2023.3
+
+# Development tools
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+pre-commit>=3.0.0
+
+# Optional: For advanced features
+redis>=4.5.0  # For memory persistence testing
+pymongo>=4.0.0  # For MongoDB memory testing
+boto3>=1.26.0  # For AWS S3 integration testing

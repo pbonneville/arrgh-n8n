@@ -6,18 +6,18 @@ To enable AWS SES to receive emails for your domain, you need to add MX records 
 ## Required DNS Records
 
 ### MX Record
-Add this MX record to your domain's DNS settings for the subdomain:
+Add this MX record to your domain's DNS settings for your chosen subdomain:
 
 ```
 Type: MX
-Name: arrgh (or arrgh.paulbonneville.com)
+Name: your-subdomain (or your-subdomain.yourdomain.com)
 Value: 10 inbound-smtp.us-west-2.amazonaws.com
 Priority: 10
 TTL: 300 (or your DNS provider's default)
 ```
 
 ### Subdomain Support (Optional)
-If you want to receive emails for specific subdomains (e.g., support@paulbonneville.com, noreply@paulbonneville.com), add:
+If you want to receive emails for specific subdomains (e.g., support@yourdomain.com, noreply@yourdomain.com), add:
 
 ```
 Type: MX
@@ -31,11 +31,11 @@ TTL: 300
 
 ### Cloudflare
 1. Log into Cloudflare dashboard
-2. Select your domain (paulbonneville.com)
+2. Select your domain (yourdomain.com)
 3. Go to DNS > Records
 4. Click "Add record"
 5. Select "MX" type
-6. Name: @ (for root domain)
+6. Name: your-subdomain (or @ for root domain)
 7. Mail server: inbound-smtp.us-east-1.amazonaws.com
 8. Priority: 10
 9. Click "Save"
@@ -67,19 +67,19 @@ TTL: 300
 After adding the MX record, verify it's working:
 
 ```bash
-# Check MX record
-dig MX arrgh.paulbonneville.com
+# Check MX record (replace with your domain)
+dig MX your-subdomain.yourdomain.com
 
 # Should return something like:
-# arrgh.paulbonneville.com. 300 IN MX 10 inbound-smtp.us-west-2.amazonaws.com.
+# your-subdomain.yourdomain.com. 300 IN MX 10 inbound-smtp.us-west-2.amazonaws.com.
 ```
 
 ### Test Email Delivery
 You can test email delivery using:
 
 ```bash
-# Send test email (replace with your domain)
-echo "Test email body" | mail -s "Test Subject" test@arrgh.paulbonneville.com
+# Send test email (replace with your actual domain)
+echo "Test email body" | mail -s "Test Subject" test@your-subdomain.yourdomain.com
 ```
 
 ## Important Notes
@@ -110,12 +110,12 @@ echo "Test email body" | mail -s "Test Subject" test@arrgh.paulbonneville.com
 
 ### Verification Commands
 ```bash
-# Check if MX record is set correctly
-nslookup -type=MX arrgh.paulbonneville.com
+# Check if MX record is set correctly (replace with your domain)
+nslookup -type=MX your-subdomain.yourdomain.com
 
 # Check DNS propagation from different locations
-dig @8.8.8.8 MX arrgh.paulbonneville.com
-dig @1.1.1.1 MX arrgh.paulbonneville.com
+dig @8.8.8.8 MX your-subdomain.yourdomain.com
+dig @1.1.1.1 MX your-subdomain.yourdomain.com
 ```
 
 ## Next Steps

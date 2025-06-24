@@ -1,0 +1,66 @@
+{
+  "subscription_confirmation": {
+    "Type": "SubscriptionConfirmation",
+    "MessageId": "12345678-1234-1234-1234-123456789012",
+    "Token": "test-token-12345",
+    "TopicArn": "arn:aws:sns:region:account:email-notifications-topic",
+    "Message": "You have chosen to subscribe to the topic arn:aws:sns:us-west-2:944355535974:n8n-email-notifications-production.\nTo confirm the subscription, visit the SubscribeURL included in this message.",
+    "SubscribeURL": "https://sns.us-west-2.amazonaws.com/?Action=ConfirmSubscription&TopicArn=arn:aws:sns:us-west-2:944355535974:n8n-email-notifications-production&Token=test-token-12345",
+    "Timestamp": "2025-06-23T10:00:00.000Z",
+    "SignatureVersion": "1",
+    "Signature": "test-signature",
+    "SigningCertURL": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-test.pem"
+  },
+  
+  "email_notification_invoice": {
+    "Type": "Notification",
+    "MessageId": "invoice-12345678-1234-1234-1234-123456789012",
+    "TopicArn": "arn:aws:sns:region:account:email-notifications-topic",
+    "Subject": "Message published to SNS topic",
+    "Message": "{\"notificationType\":\"Received\",\"mail\":{\"timestamp\":\"2025-06-23T15:00:00.000Z\",\"source\":\"billing@acme.com\",\"messageId\":\"invoice-email-001\",\"destination\":[\"invoices@your-subdomain.yourdomain.com\"],\"commonHeaders\":{\"from\":[\"Acme Billing <billing@acme.com>\"],\"to\":[\"invoices@your-subdomain.yourdomain.com\"],\"subject\":\"Invoice #INV-2025-001 - Payment Due $2,500.00\",\"date\":\"Mon, 23 Jun 2025 15:00:00 +0000\"}},\"receipt\":{\"action\":{\"type\":\"S3\",\"bucketName\":\"your-email-storage-bucket\",\"objectKey\":\"emails/invoice-email-001\"}}}",
+    "Timestamp": "2025-06-23T15:00:00.000Z",
+    "SignatureVersion": "1",
+    "Signature": "test-signature-invoice",
+    "SigningCertURL": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-test.pem",
+    "UnsubscribeURL": "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=test-invoice"
+  },
+  
+  "email_notification_support": {
+    "Type": "Notification",
+    "MessageId": "support-12345678-1234-1234-1234-123456789012",
+    "TopicArn": "arn:aws:sns:region:account:email-notifications-topic",
+    "Subject": "Message published to SNS topic",
+    "Message": "{\"notificationType\":\"Received\",\"mail\":{\"timestamp\":\"2025-06-23T16:30:00.000Z\",\"source\":\"customer@example.com\",\"messageId\":\"support-email-001\",\"destination\":[\"support@your-subdomain.yourdomain.com\"],\"commonHeaders\":{\"from\":[\"Urgent Customer <customer@example.com>\"],\"to\":[\"support@your-subdomain.yourdomain.com\"],\"subject\":\"URGENT: Production system down - immediate assistance needed\",\"date\":\"Mon, 23 Jun 2025 16:30:00 +0000\"}},\"receipt\":{\"action\":{\"type\":\"S3\",\"bucketName\":\"your-email-storage-bucket\",\"objectKey\":\"emails/support-email-001\"}}}",
+    "Timestamp": "2025-06-23T16:30:00.000Z",
+    "SignatureVersion": "1",
+    "Signature": "test-signature-support",
+    "SigningCertURL": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-test.pem",
+    "UnsubscribeURL": "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=test-support"
+  },
+  
+  "email_notification_sales": {
+    "Type": "Notification",
+    "MessageId": "sales-12345678-1234-1234-1234-123456789012",
+    "TopicArn": "arn:aws:sns:region:account:email-notifications-topic",
+    "Subject": "Message published to SNS topic",
+    "Message": "{\"notificationType\":\"Received\",\"mail\":{\"timestamp\":\"2025-06-23T14:15:00.000Z\",\"source\":\"prospect@bigcorp.com\",\"messageId\":\"sales-email-001\",\"destination\":[\"sales@your-subdomain.yourdomain.com\"],\"commonHeaders\":{\"from\":[\"Jane Prospect <prospect@bigcorp.com>\"],\"to\":[\"sales@your-subdomain.yourdomain.com\"],\"subject\":\"Partnership Opportunity - Meeting Request for Demo\",\"date\":\"Mon, 23 Jun 2025 14:15:00 +0000\"}},\"receipt\":{\"action\":{\"type\":\"S3\",\"bucketName\":\"your-email-storage-bucket\",\"objectKey\":\"emails/sales-email-001\"}}}",
+    "Timestamp": "2025-06-23T14:15:00.000Z",
+    "SignatureVersion": "1",
+    "Signature": "test-signature-sales",
+    "SigningCertURL": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-test.pem",
+    "UnsubscribeURL": "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=test-sales"
+  },
+  
+  "email_notification_general": {
+    "Type": "Notification",
+    "MessageId": "general-12345678-1234-1234-1234-123456789012",
+    "TopicArn": "arn:aws:sns:region:account:email-notifications-topic",
+    "Subject": "Message published to SNS topic",
+    "Message": "{\"notificationType\":\"Received\",\"mail\":{\"timestamp\":\"2025-06-23T12:00:00.000Z\",\"source\":\"newsletter@techcompany.com\",\"messageId\":\"general-email-001\",\"destination\":[\"info@your-subdomain.yourdomain.com\"],\"commonHeaders\":{\"from\":[\"Tech Company Newsletter <newsletter@techcompany.com>\"],\"to\":[\"info@your-subdomain.yourdomain.com\"],\"subject\":\"Weekly Tech Newsletter - Industry Updates\",\"date\":\"Mon, 23 Jun 2025 12:00:00 +0000\"}},\"receipt\":{\"action\":{\"type\":\"S3\",\"bucketName\":\"your-email-storage-bucket\",\"objectKey\":\"emails/general-email-001\"}}}",
+    "Timestamp": "2025-06-23T12:00:00.000Z",
+    "SignatureVersion": "1",
+    "Signature": "test-signature-general",
+    "SigningCertURL": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-test.pem",
+    "UnsubscribeURL": "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=test-general"
+  }
+}

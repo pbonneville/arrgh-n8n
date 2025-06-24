@@ -1,0 +1,222 @@
+{
+  "webhook_input": {
+    "description": "Input received by n8n webhook from SNS",
+    "headers": {
+      "x-amz-sns-message-type": "Notification",
+      "x-amz-sns-message-id": "test-message-123",
+      "x-amz-sns-topic-arn": "arn:aws:sns:region:account:email-notifications-topic",
+      "content-type": "text/plain",
+      "user-agent": "Amazon Simple Notification Service Agent"
+    },
+    "body": {
+      "Type": "Notification",
+      "MessageId": "invoice-12345678-1234-1234-1234-123456789012",
+      "TopicArn": "arn:aws:sns:region:account:email-notifications-topic",
+      "Subject": "Message published to SNS topic",
+      "Message": "{\"notificationType\":\"Received\",\"mail\":{\"timestamp\":\"2025-06-23T15:00:00.000Z\",\"source\":\"billing@acme.com\",\"messageId\":\"invoice-email-001\",\"destination\":[\"invoices@your-subdomain.yourdomain.com\"],\"commonHeaders\":{\"from\":[\"Acme Billing <billing@acme.com>\"],\"to\":[\"invoices@your-subdomain.yourdomain.com\"],\"subject\":\"Invoice #INV-2025-001 - Payment Due $2,500.00\",\"date\":\"Mon, 23 Jun 2025 15:00:00 +0000\"}},\"receipt\":{\"action\":{\"type\":\"S3\",\"bucketName\":\"your-email-storage-bucket\",\"objectKey\":\"emails/invoice-email-001\"}}}",
+      "Timestamp": "2025-06-23T15:00:00.000Z",
+      "SignatureVersion": "1",
+      "Signature": "test-signature-invoice",
+      "SigningCertURL": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-test.pem",
+      "UnsubscribeURL": "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=test-invoice"
+    }
+  },
+  
+  "parse_email_content_output": {
+    "description": "Output from Parse Email Content node",
+    "json": {
+      "messageId": "invoice-email-001",
+      "timestamp": "2025-06-23T15:00:00.000Z",
+      "from": "billing@acme.com",
+      "to": "invoices@your-subdomain.yourdomain.com",
+      "subject": "Invoice #INV-2025-001 - Payment Due $2,500.00",
+      "date": "Mon, 23 Jun 2025 15:00:00 +0000",
+      "body": "Dear Valued Customer,\n\nWe hope this email finds you well. Please find below the details for Invoice #INV-2025-001.\n\nINVOICE DETAILS:\n- Invoice Number: INV-2025-001\n- Invoice Date: June 15, 2025\n- Due Date: July 15, 2025\n- Amount Due: $2,500.00\n\nSERVICES PROVIDED:\n- Consulting Services (40 hours @ $60/hour): $2,400.00\n- Administrative Fee: $100.00\n- Total Amount: $2,500.00\n\nPAYMENT INSTRUCTIONS:\n- Please remit payment within 30 days of invoice date\n- Payment can be made via check, wire transfer, or ACH\n- Late payments may incur a 1.5% monthly service charge\n\nFor questions regarding this invoice, please contact our billing department at billing@acme.com or call (555) 123-4567.\n\nThank you for your business!\n\nBest regards,\nAccounting Department\nAcme Corporation\n123 Business Street\nBusiness City, BC 12345",
+      "headers": {
+        "from": "Acme Billing <billing@acme.com>",
+        "to": "invoices@your-subdomain.yourdomain.com",
+        "subject": "Invoice #INV-2025-001 - Payment Due $2,500.00",
+        "date": "Mon, 23 Jun 2025 15:00:00 +0000",
+        "message-id": "<invoice-email-001@acme.com>",
+        "content-type": "text/plain; charset=UTF-8"
+      },
+      "rawContent": "From: Acme Billing <billing@acme.com>\nTo: invoices@your-subdomain.yourdomain.com\nSubject: Invoice #INV-2025-001 - Payment Due $2,500.00\nDate: Mon, 23 Jun 2025 15:00:00 +0000\n\nDear Valued Customer,\n\nWe hope this email finds you well. Please find below the details for Invoice #INV-2025-001..."
+    }
+  },
+  
+  "prepare_email_data_output": {
+    "description": "Output from Prepare Email Data (preprocessing) node",
+    "json": {
+      "email_data": {
+        "id": "invoice-email-001",
+        "from": "billing@acme.com",
+        "subject": "Invoice #INV-2025-001 - Payment Due $2,500.00",
+        "body": "Dear Valued Customer,\n\nWe hope this email finds you well. Please find below the details for Invoice #INV-2025-001.\n\nINVOICE DETAILS:\n- Invoice Number: INV-2025-001\n- Invoice Date: June 15, 2025\n- Due Date: July 15, 2025\n- Amount Due: $2,500.00\n\nSERVICES PROVIDED:\n- Consulting Services (40 hours @ $60/hour): $2,400.00\n- Administrative Fee: $100.00\n- Total Amount: $2,500.00\n\nPAYMENT INSTRUCTIONS:\n- Please remit payment within 30 days of invoice date\n- Payment can be made via check, wire transfer, or ACH\n- Late payments may incur a 1.5% monthly service charge\n\nFor questions regarding this invoice, please contact our billing department at billing@acme.com or call (555) 123-4567.\n\nThank you for your business!\n\nBest regards,\nAccounting Department\nAcme Corporation\n123 Business Street\nBusiness City, BC 12345",
+        "timestamp": "2025-06-23T15:00:00.000Z",
+        "thread_id": "a8b9c1d2"
+      },
+      "analysis_request": {
+        "categorize": true,
+        "extract_entities": true,
+        "assess_priority": true,
+        "suggest_actions": true
+      },
+      "context": {
+        "system": "arrgh-email-processor",
+        "version": "2.0",
+        "processing_time": "2025-06-23T15:00:01.123Z"
+      }
+    }
+  },
+  
+  "ai_agent_output": {
+    "description": "Output from AI Email Processor (LangChain Agent) node",
+    "json": {
+      "category": "invoice",
+      "priority": "medium",
+      "confidence": 0.95,
+      "entities": {
+        "invoice_number": "INV-2025-001",
+        "amount": "$2,500.00",
+        "due_date": "July 15, 2025",
+        "invoice_date": "June 15, 2025",
+        "company": "Acme Corporation",
+        "contact_email": "billing@acme.com",
+        "contact_phone": "(555) 123-4567",
+        "payment_terms": "30 days",
+        "services": [
+          {
+            "description": "Consulting Services",
+            "quantity": "40 hours",
+            "rate": "$60/hour",
+            "amount": "$2,400.00"
+          },
+          {
+            "description": "Administrative Fee",
+            "amount": "$100.00"
+          }
+        ]
+      },
+      "suggested_actions": [
+        "Forward to accounting team",
+        "Add to payment tracking system",
+        "Set calendar reminder for due date (July 15, 2025)",
+        "Process payment within 30 days",
+        "Verify services received before payment"
+      ],
+      "reasoning": "Email contains clear invoice information with specific invoice number (INV-2025-001), amount ($2,500.00), and due date (July 15, 2025). Classified as medium priority invoice requiring standard payment processing workflow. Contains all necessary payment details and contact information.",
+      "processing_metadata": {
+        "processed_at": "2025-06-23T15:00:02.456Z",
+        "processing_time_ms": 1250,
+        "model_used": "claude-sonnet-4",
+        "tokens_used": 245,
+        "confidence_breakdown": {
+          "category_confidence": 0.98,
+          "priority_confidence": 0.92,
+          "entity_extraction_confidence": 0.95
+        }
+      }
+    }
+  },
+  
+  "memory_output": {
+    "description": "Output from Email Memory (Memory Buffer Window) node",
+    "json": {
+      "memory_context": {
+        "current_thread": "a8b9c1d2",
+        "thread_messages": [
+          {
+            "timestamp": "2025-06-23T15:00:00.000Z",
+            "thread_id": "a8b9c1d2",
+            "message_id": "invoice-email-001",
+            "from": "billing@acme.com",
+            "subject": "Invoice #INV-2025-001 - Payment Due $2,500.00",
+            "content_preview": "Dear Valued Customer, We hope this email finds you well. Please find below the details for Invoice #INV-2025-001. INVOICE DETAILS: - Invoice Number: INV-2025-001..."
+          }
+        ],
+        "recent_messages": [
+          {
+            "timestamp": "2025-06-23T14:30:00.000Z",
+            "thread_id": "x1y2z3a4",
+            "message_id": "support-email-001",
+            "from": "customer@example.com",
+            "subject": "URGENT: Production system down",
+            "content_preview": "URGENT SUPPORT REQUEST Hello Support Team, We are experiencing a critical issue with our production system..."
+          },
+          {
+            "timestamp": "2025-06-23T15:00:00.000Z",
+            "thread_id": "a8b9c1d2",
+            "message_id": "invoice-email-001",
+            "from": "billing@acme.com",
+            "subject": "Invoice #INV-2025-001 - Payment Due $2,500.00",
+            "content_preview": "Dear Valued Customer, We hope this email finds you well. Please find below the details for Invoice #INV-2025-001..."
+          }
+        ],
+        "thread_count": 2,
+        "total_messages": 2
+      },
+      "memory_summary": {
+        "active_threads": ["x1y2z3a4", "a8b9c1d2"],
+        "window_size": 5,
+        "buffer_utilization": 0.4
+      }
+    }
+  },
+  
+  "process_results_output": {
+    "description": "Output from Process Results (postprocessing) node",
+    "json": {
+      "email_id": "invoice-email-001",
+      "processed_at": "2025-06-23T15:00:03.789Z",
+      "processing_result": {
+        "category": "invoice",
+        "priority": "medium",
+        "confidence": 0.95,
+        "entities": {
+          "invoice_number": "INV-2025-001",
+          "amount": "$2,500.00",
+          "due_date": "July 15, 2025",
+          "invoice_date": "June 15, 2025",
+          "company": "Acme Corporation",
+          "contact_email": "billing@acme.com",
+          "contact_phone": "(555) 123-4567",
+          "payment_terms": "30 days"
+        },
+        "suggested_actions": [
+          "Forward to accounting team",
+          "Add to payment tracking system",
+          "Set calendar reminder for due date (July 15, 2025)",
+          "Process payment within 30 days",
+          "Verify services received before payment"
+        ],
+        "reasoning": "Email contains clear invoice information with specific invoice number (INV-2025-001), amount ($2,500.00), and due date (July 15, 2025). Classified as medium priority invoice requiring standard payment processing workflow."
+      },
+      "email_metadata": {
+        "from": "billing@acme.com",
+        "subject": "Invoice #INV-2025-001 - Payment Due $2,500.00",
+        "timestamp": "2025-06-23T15:00:00.000Z",
+        "thread_id": "a8b9c1d2"
+      },
+      "processing_status": "completed",
+      "system_info": {
+        "processor": "arrgh-email-processor-v2",
+        "model": "claude-sonnet-4",
+        "workflow_version": "2.0.0",
+        "total_processing_time_ms": 2666
+      }
+    }
+  },
+  
+  "webhook_response": {
+    "description": "Final response sent back to SNS webhook",
+    "status": 200,
+    "body": "Email processed successfully",
+    "headers": {
+      "content-type": "text/plain",
+      "x-processing-time": "2666ms",
+      "x-email-id": "invoice-email-001",
+      "x-category": "invoice",
+      "x-priority": "medium"
+    }
+  }
+}
