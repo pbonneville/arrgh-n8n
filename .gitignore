@@ -35,3 +35,11 @@ node_modules/
 # Build outputs
 dist/
 build/
+
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfstate.*.backup
+*.tfplan
+*.tfplan.*

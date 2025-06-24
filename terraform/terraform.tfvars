@@ -1,0 +1,4 @@
+aws_region = "us-west-2"
+domain_name = "arrgh.paulbonneville.com"
+n8n_webhook_url = "https://n8n.paulbonneville.com/webhook/inbound-email"
+environment = "production"

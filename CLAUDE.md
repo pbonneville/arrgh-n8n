@@ -123,3 +123,33 @@ GKE deployment optimized for free tier usage:
 - Estimated $0-40/month with free tier credits
 - Single minimal resource allocation
 - Alternative platforms (Railway, Render) available if costs exceed budget
+
+## Inbound Email Processing
+
+AWS SES inbound email processing is configured to forward emails to n8n for automated processing:
+
+### Quick Deployment
+```bash
+# Deploy complete inbound email infrastructure
+./deploy-inbound-email.sh
+```
+
+### Manual Setup
+1. **Deploy AWS Infrastructure**: `cd terraform && terraform apply`
+2. **Configure DNS**: Add MX record (see `docs/dns-mx-setup.md`)
+3. **Import n8n Workflow**: Upload `workflows/inbound-email-processor.json`
+4. **Test**: Send email to your domain
+
+### Architecture
+- **Email Reception**: AWS SES receives emails via MX record
+- **Storage**: Emails stored in S3 bucket with 30-day lifecycle
+- **Notification**: SNS triggers n8n webhook in real-time
+- **Processing**: n8n downloads, parses, and processes email content
+- **Custom Logic**: Add business logic in the "Process Email Logic" node
+
+### Cost Impact
+- SES: $0.10 per 1,000 emails received
+- S3: Minimal storage costs (emails auto-deleted after 30 days)
+- SNS: $0.50 per 1 million notifications
+
+See `docs/inbound-email-deployment.md` for complete setup instructions.

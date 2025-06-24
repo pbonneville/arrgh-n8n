@@ -1,0 +1,278 @@
+{
+  "name": "Arrgh Email Processor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inbound-email",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "cc0ee941-552c-4e7b-a9fb-3a074c591fb1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        920,
+        160
+      ],
+      "webhookId": "inbound-email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.headers['x-amz-sns-message-type'] }}",
+              "value2": "SubscriptionConfirmation"
+            }
+          ]
+        }
+      },
+      "id": "39568785-10f8-4906-9a77-aa8dca58de73",
+      "name": "Is Subscription Confirmation?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.parseJson().SubscribeURL}}",
+        "options": {}
+      },
+      "id": "ab7dc7a4-15eb-49a5-acc2-bd7824eed7ac",
+      "name": "Confirm Subscription",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1360,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.Type}}",
+              "value2": "Notification"
+            }
+          ]
+        }
+      },
+      "id": "5a4f518d-8a02-4068-bf9c-0ea79758380d",
+      "name": "Is Email Notification?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the SNS message to extract email metadata\n// First parse the webhook body, then extract the Message field\nconst snsBody = typeof $json.body === 'string' ? JSON.parse($json.body) : $json.body;\nconst message = JSON.parse(snsBody.Message);\n\n// Extract email details from SES notification\nconst emailData = {\n  messageId: message.mail.messageId,\n  timestamp: message.mail.timestamp,\n  source: message.mail.source,\n  destination: message.mail.destination,\n  commonHeaders: message.mail.commonHeaders,\n  receipt: message.receipt,\n  s3Bucket: message.receipt.action.bucketName,\n  s3ObjectKey: message.receipt.action.objectKey\n};\n\nreturn emailData;"
+      },
+      "id": "ab789de3-8189-4ad2-8997-93c93b8512d7",
+      "name": "Parse Email Metadata",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1580,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{$json.s3Bucket}}.s3.amazonaws.com/{{$json.s3ObjectKey}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "aws",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "06db075e-f695-4939-b699-ea8e34c4e084",
+      "name": "Download Email from S3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1800,
+        260
+      ],
+      "credentials": {
+        "aws": "{{$vars.AWS_CREDENTIALS_NAME}}"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the raw email content\nconst emailContent = $json.data;\n\n// Simple email parsing (you might want to use a more robust parser)\nconst lines = emailContent.split('\\n');\nlet inHeaders = true;\nlet headers = {};\nlet body = '';\nlet currentHeader = '';\n\nfor (let line of lines) {\n  if (inHeaders) {\n    if (line.trim() === '') {\n      inHeaders = false;\n      continue;\n    }\n    \n    if (line.startsWith(' ') || line.startsWith('\\t')) {\n      // Continuation of previous header\n      if (currentHeader) {\n        headers[currentHeader] += ' ' + line.trim();\n      }\n    } else {\n      // New header\n      const colonIndex = line.indexOf(':');\n      if (colonIndex > 0) {\n        currentHeader = line.substring(0, colonIndex).toLowerCase();\n        headers[currentHeader] = line.substring(colonIndex + 1).trim();\n      }\n    }\n  } else {\n    body += line + '\\n';\n  }\n}\n\n// Extract common email fields\nconst parsedEmail = {\n  messageId: $input.first().json.messageId,\n  timestamp: $input.first().json.timestamp,\n  from: headers['from'] || '',\n  to: headers['to'] || '',\n  subject: headers['subject'] || '',\n  date: headers['date'] || '',\n  body: body.trim(),\n  headers: headers,\n  rawContent: emailContent\n};\n\nreturn parsedEmail;"
+      },
+      "id": "557ea7be-0b35-4820-a6d4-d4197e59a48f",
+      "name": "Parse Email Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2020,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Email processed successfully",
+        "options": {}
+      },
+      "id": "17674bbc-6715-455a-9dec-16833e73fd69",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2460,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Subscription confirmed",
+        "options": {}
+      },
+      "id": "03faae9f-edb2-4e19-af18-bd60f2d8890c",
+      "name": "Subscription Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1580,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// This is where you can add your custom email processing logic\n// The parsed email data is available in $json\n\n// Example: Log email details\nconsole.log('Received email from:', $json.from);\nconsole.log('Subject:', $json.subject);\nconsole.log('Body preview:', $json.body.substring(0, 100));\n\n// Example: Extract specific data from email body\n// const bodyText = $json.body.toLowerCase();\n// if (bodyText.includes('invoice')) {\n//   // Process as invoice\n// } else if (bodyText.includes('support')) {\n//   // Process as support ticket\n// }\n\n// Return the processed data\nreturn {\n  processed: true,\n  emailFrom: $json.from,\n  emailSubject: $json.subject,\n  receivedAt: new Date().toISOString(),\n  processingResult: 'Email logged successfully'\n};"
+      },
+      "id": "ec8e42bc-b131-4e1b-84f1-e6f474324880",
+      "name": "Process Email Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        260
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Subscription Confirmation?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Subscription Confirmation?": {
+      "main": [
+        [
+          {
+            "node": "Confirm Subscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Email Notification?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Subscription": {
+      "main": [
+        [
+          {
+            "node": "Subscription Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Email Notification?": {
+      "main": [
+        [
+          {
+            "node": "Parse Email Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Email Metadata": {
+      "main": [
+        [
+          {
+            "node": "Download Email from S3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Email from S3": {
+      "main": [
+        [
+          {
+            "node": "Parse Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Email Content": {
+      "main": [
+        [
+          {
+            "node": "Process Email Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Email Logic": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f0956a2f-f8fb-4083-a18d-4ef10a07d43f",
+  "meta": {
+    "instanceId": "46aa6b2ba090ed4169cb65c3e75a1913292d55c146104682b5b65cfe4ea94dce"
+  },
+  "id": "B59fialntF5x0ZUC",
+  "tags": []
+}
