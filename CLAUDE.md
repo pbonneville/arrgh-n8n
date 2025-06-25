@@ -124,6 +124,24 @@ GKE deployment optimized for free tier usage:
 - Single minimal resource allocation
 - Alternative platforms (Railway, Render) available if costs exceed budget
 
+## GitHub Actions & PR Standards
+
+This repository uses shared GitHub Actions workflows from `arrgh-hub` for PR validation and automation:
+
+### Workflow Architecture
+- **Shared workflows**: Hosted in `pbonneville/arrgh-hub/.github/workflows/`
+- **Local wrappers**: Minimal `.github/workflows/` files that call the shared ones
+- **PR template**: Standardized `.github/pull_request_template.md`
+
+### Features
+- **PR Validation**: Size limits (200 lines for infra changes), conventional commits
+- **Auto-labeling**: Based on PR type (feat, fix, docs, etc.)
+- **Auto-merge**: Enabled for docs and chore PRs only
+- **Release notes**: Automatic generation for features/fixes
+- **Security scanning**: Detects security-related file changes
+
+See `docs/github-actions-shared-workflows.md` for complete documentation.
+
 ## Inbound Email Processing
 
 AWS SES inbound email processing is configured to forward emails to n8n for automated processing:
