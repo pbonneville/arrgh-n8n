@@ -6,7 +6,7 @@ This guide explains how to set up AWS SES (Simple Email Service) as the email pr
 
 - AWS account with SES access
 - Verified domain or email address in SES
-- n8n instance deployed on GKE
+- n8n instance deployed on Render.com
 
 ## AWS SES Setup
 
@@ -41,45 +41,50 @@ To request production access:
 
 ## n8n Configuration
 
-### 1. Update Kubernetes Secrets
+### 1. Update Render Environment Variables
 
-Edit `kubernetes/secrets.yaml`:
+In the Render dashboard, set these environment variables for your n8n service:
 
-```yaml
-# AWS SES SMTP credentials
-N8N_SMTP_USER: "YOUR_ACTUAL_SES_SMTP_USERNAME"
-N8N_SMTP_PASS: "YOUR_ACTUAL_SES_SMTP_PASSWORD"
+```bash
+# AWS SES SMTP credentials (set as secrets)
+N8N_SMTP_USER=YOUR_ACTUAL_SES_SMTP_USERNAME
+N8N_SMTP_PASS=YOUR_ACTUAL_SES_SMTP_PASSWORD
 ```
 
-### 2. Update ConfigMap (if needed)
+### 2. Verify Email Configuration
 
-The `kubernetes/configmap.yaml` is pre-configured with:
+The `render.yaml` is pre-configured with these email settings:
 
 ```yaml
 # Email configuration (AWS SES)
-N8N_EMAIL_MODE: "smtp"
-N8N_SMTP_HOST: "email-smtp.us-west-2.amazonaws.com"  # Change to your region
-N8N_SMTP_PORT: "587"
-N8N_SMTP_SSL: "true"
-N8N_DEFAULT_EMAIL: "noreply@paulbonneville.com"  # Change to your verified email
+- key: N8N_EMAIL_MODE
+  value: smtp
+- key: N8N_SMTP_HOST
+  value: email-smtp.us-east-1.amazonaws.com  # Change to your region
+- key: N8N_SMTP_PORT
+  value: 587
+- key: N8N_SMTP_SSL
+  value: false
+- key: N8N_SMTP_STARTTLS
+  value: true
+- key: N8N_DEFAULT_EMAIL
+  value: paul@paulbonneville.com  # Change to your verified email
 ```
 
-Update:
+Update if needed:
 - `N8N_SMTP_HOST`: Use your SES region's endpoint
 - `N8N_DEFAULT_EMAIL`: Use your verified email address
 
 ### 3. Deploy Changes
 
-```bash
-# Apply the updated configurations
-kubectl apply -f kubernetes/secrets.yaml
-kubectl apply -f kubernetes/configmap.yaml
+After updating environment variables in Render dashboard:
 
-# Restart n8n to pick up changes
-kubectl rollout restart deployment/n8n -n n8n
+```bash
+# Redeploy the service (or push to GitHub for auto-deploy)
+render services restart <service-id>
 
 # Check deployment status
-kubectl rollout status deployment/n8n -n n8n
+render services list
 ```
 
 ## Testing Email Functionality
@@ -99,7 +104,7 @@ kubectl rollout status deployment/n8n -n n8n
 
 ### Check Logs
 ```bash
-kubectl logs -n n8n deployment/n8n --tail=100
+render logs <service-id> --tail=100
 ```
 
 ### Common Issues
@@ -110,7 +115,7 @@ kubectl logs -n n8n deployment/n8n --tail=100
 
 2. **Connection Timeout**:
    - Check SMTP host and port
-   - Verify security group allows outbound SMTP
+   - Verify Render service has outbound internet access
 
 3. **Email Not Sending**:
    - Confirm sender email is verified in SES

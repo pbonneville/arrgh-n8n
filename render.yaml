@@ -1,0 +1,75 @@
+services:
+  # n8n Web Service (connects to existing Cloud SQL)
+  - type: web
+    name: n8n
+    env: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    envVars:
+      # n8n Basic Configuration
+      - key: N8N_BASIC_AUTH_ACTIVE
+        value: true
+      - key: N8N_BASIC_AUTH_USER
+        value: admin
+      - key: N8N_BASIC_AUTH_PASSWORD
+        generateValue: true
+      - key: N8N_ENCRYPTION_KEY
+        generateValue: true
+      - key: N8N_HOST
+        fromService:
+          type: web
+          name: n8n
+          property: host
+      - key: N8N_PORT
+        value: 5678
+      - key: N8N_PROTOCOL
+        value: https
+      - key: WEBHOOK_URL
+        fromService:
+          type: web
+          name: n8n
+          property: hostWithProtocol
+      - key: EXECUTIONS_MODE
+        value: regular
+      
+      # Cloud SQL Database Configuration
+      - key: DB_TYPE
+        value: postgresdb
+      - key: DB_POSTGRESDB_HOST
+        value: 35.225.58.181
+      - key: DB_POSTGRESDB_PORT
+        value: 5432
+      - key: DB_POSTGRESDB_DATABASE
+        value: n8n
+      - key: DB_POSTGRESDB_USER
+        value: postgres
+      - key: DB_POSTGRESDB_PASSWORD
+        sync: false  # Set manually in Render dashboard
+      - key: DB_POSTGRESDB_SSL_ENABLED
+        value: false
+      
+      # Email Configuration (AWS SES)
+      - key: N8N_EMAIL_MODE
+        value: smtp
+      - key: N8N_SMTP_HOST
+        value: email-smtp.us-east-1.amazonaws.com
+      - key: N8N_SMTP_PORT
+        value: 587
+      - key: N8N_SMTP_SSL
+        value: false
+      - key: N8N_SMTP_STARTTLS
+        value: true
+      - key: N8N_DEFAULT_EMAIL
+        value: paul@paulbonneville.com
+      - key: N8N_DEFAULT_EMAIL_FROM_NAME
+        value: n8n
+      - key: N8N_SMTP_SENDER
+        value: paul@paulbonneville.com
+      - key: N8N_SMTP_USER
+        sync: false  # Set manually in Render dashboard
+      - key: N8N_SMTP_PASS
+        sync: false  # Set manually in Render dashboard
+    disk:
+      name: n8n-data
+      mountPath: /home/node/.n8n
+      sizeGB: 5
