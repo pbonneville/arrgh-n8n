@@ -8,7 +8,7 @@ This guide walks through deploying the complete AWS SES inbound email processing
 1. **AWS CLI configured** with appropriate permissions
 2. **Terraform installed** (version >= 1.0)
 3. **Domain verified in AWS SES** for outbound email (should already be done)
-4. **n8n instance running** on GKE with external access
+4. **n8n instance running** on Render.com with external access
 
 ## Deployment Steps
 
@@ -23,7 +23,7 @@ cp terraform.tfvars.example terraform.tfvars
 
 # Edit terraform.tfvars with your values:
 # - domain_name: Your domain (e.g., "paulbonneville.com")
-# - n8n_webhook_url: Your n8n webhook URL
+# - n8n_webhook_url: Your Render n8n webhook URL (e.g., "https://n8n-yourapp.onrender.com/webhook/inbound-email")
 # - aws_region: AWS region (must match your SES region)
 
 # Initialize Terraform
@@ -48,16 +48,14 @@ The MX record should be:
 ### 3. Import n8n Workflow
 
 1. **Access your n8n instance**:
-   ```bash
-   # Get the external IP
-   kubectl get service n8n-service -n n8n
-   ```
+   - Navigate to your Render-assigned URL (e.g., `https://n8n-yourapp.onrender.com`)
+   - Or check the Render dashboard for your service URL
 
 2. **Import the workflow**:
    - Log into n8n web interface
    - Go to "Workflows"
    - Click "Import from File"
-   - Upload `workflows/inbound-email-processor.json`
+   - Upload `workflows/backup-20250626-162633/Arrgh_Email_Processor.json`
 
 3. **Configure AWS credentials** in n8n:
    - Go to "Credentials"
@@ -75,7 +73,7 @@ The Terraform deployment creates an SNS subscription to your n8n webhook, but yo
 
 1. **Check your n8n logs** for subscription confirmation:
    ```bash
-   kubectl logs -n n8n deployment/n8n --tail=50
+   render logs <your-n8n-service-id> --tail=50
    ```
 
 2. **The workflow should automatically confirm** the SNS subscription when it receives the confirmation request.
@@ -111,7 +109,7 @@ echo "Test email body for n8n processing" | mail -s "Test Subject" test@yourdoma
 ### 2. Monitor Processing
 ```bash
 # Check n8n logs
-kubectl logs -n n8n deployment/n8n --tail=20 -f
+render logs <your-n8n-service-id> --tail=20 --follow
 
 # Check AWS CloudWatch logs (if enabled)
 aws logs tail /aws/lambda/ses-processing --follow
@@ -185,8 +183,9 @@ expiration {
 
 2. **n8n workflow not triggering**:
    - Confirm SNS subscription is confirmed
-   - Check n8n webhook URL accessibility
+   - Check n8n webhook URL accessibility (Render URLs are public by default)
    - Verify AWS credentials in n8n
+   - Ensure Render service is active and not sleeping
 
 3. **Email parsing errors**:
    - Check S3 bucket for email files
@@ -207,6 +206,12 @@ aws sns list-subscriptions-by-topic --topic-arn $(terraform output -raw sns_topi
 
 # Test MX record
 dig MX yourdomain.com +short
+
+# Check Render service status
+render services list
+
+# Get Render service URL
+render services get <service-id>
 ```
 
 ## Cleanup
