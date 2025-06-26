@@ -1,12 +1,12 @@
 # n8n Self-Hosted Setup
 
-This repository provides configurations for running n8n both locally (for development) and on Google Kubernetes Engine (for production).
+This repository provides configurations for running n8n both locally (for development) and on Render.com (for production).
 
 ## Overview
 
 n8n is a workflow automation tool that allows you to connect various services and automate tasks. This setup includes:
 - Local development environment with Docker Compose
-- Production deployment on GKE with Supabase database
+- Production deployment on Render.com with Cloud SQL database
 - Persistent storage for workflows and credentials
 
 ## Prerequisites
@@ -16,11 +16,11 @@ n8n is a workflow automation tool that allows you to connect various services an
 - Docker Compose
 - 4GB RAM available
 
-### Production (GKE)
-- Google Cloud account with billing enabled
-- gcloud CLI installed and configured
-- kubectl installed
-- Supabase account and database
+### Production (Render)
+- Render.com account
+- GitHub repository connected to Render
+- Render CLI installed (optional)
+- Cloud SQL database (existing)
 
 ## Local Development
 
@@ -58,106 +58,89 @@ To remove all data:
 docker-compose down -v
 ```
 
-## Production Deployment (GKE)
+## Production Deployment (Render)
 
 ### Cost Estimate
-- **Monthly cost**: $0-40 (with GKE free tier)
-- **Without free tier**: ~$110/month
-- Includes: GKE cluster management, compute resources, and load balancer
+- **Monthly cost**: ~$7 (web service only)
+- Uses existing Cloud SQL database (no additional cost)
+- Includes: SSL certificates, auto-deployments, monitoring
 
 ### Setup Steps
 
-1. **Create GKE Autopilot Cluster**
+1. **Push Code to GitHub**
    ```bash
-   gcloud container clusters create-auto n8n-cluster \
-     --region=us-central1 \
-     --release-channel=regular
+   git add .
+   git commit -m "Add Render deployment configuration"
+   git push origin main
    ```
 
-2. **Configure kubectl**
-   ```bash
-   gcloud container clusters get-credentials n8n-cluster --region=us-central1
-   ```
+2. **Deploy via Render Dashboard**
+   - Login to [render.com](https://render.com)
+   - Click "New" → "Blueprint"
+   - Connect your GitHub repository
+   - Render will detect `render.yaml` automatically
+   - Click "Apply"
 
-3. **Update Secrets**
-   Edit `kubernetes/secrets.yaml`:
-   - Set secure passwords for `N8N_BASIC_AUTH_PASSWORD` and `N8N_ENCRYPTION_KEY`
-   - Update `DB_POSTGRESDB_PASSWORD` with your Supabase password
+3. **Set Manual Environment Variables**
+   In the Render dashboard, set these secrets:
+   - `DB_POSTGRESDB_PASSWORD` - Your Cloud SQL postgres password
+   - `N8N_SMTP_USER` - AWS SES SMTP username  
+   - `N8N_SMTP_PASS` - AWS SES SMTP password
 
-4. **Update Database Configuration**
-   Edit `kubernetes/configmap.yaml`:
-   - Update `DB_POSTGRESDB_HOST` with your Supabase host
-
-5. **Deploy n8n**
-   ```bash
-   kubectl apply -f kubernetes/
-   ```
-
-6. **Get External IP**
-   ```bash
-   kubectl get service n8n-service -n n8n
-   ```
-   Wait for EXTERNAL-IP to be assigned (may take 2-3 minutes)
-
-7. **Access n8n**
-   - URL: `http://<EXTERNAL-IP>`
+4. **Access n8n**
+   - URL: Auto-assigned by Render (e.g., `https://n8n-yourapp.onrender.com`)
    - Username: `admin`
-   - Password: (what you set in secrets.yaml)
+   - Password: Check Render dashboard for auto-generated password
 
 ### Production Features
-- Persistent storage via Supabase
-- Auto-scaling capabilities
-- Session affinity for webhooks
-- Health checks and auto-recovery
-- SSL can be added with Ingress
+- Persistent storage via Cloud SQL
+- Automatic SSL certificates
+- Auto-deployments from GitHub
+- Built-in monitoring and logging
+- Custom domain support
 
 ### Monitoring
 
-Check pod status:
+View service status:
 ```bash
-kubectl get pods -n n8n
+render services list --output json
 ```
 
 View logs:
 ```bash
-kubectl logs -n n8n -l app=n8n
+render logs <service-id>
 ```
 
 ### Updating n8n
 
-1. Update the deployment:
-   ```bash
-   kubectl set image deployment/n8n n8n=n8nio/n8n:new-version -n n8n
-   ```
+Render automatically deploys when you push to GitHub:
+```bash
+git push origin main
+```
 
-2. Or edit and reapply:
-   ```bash
-   kubectl apply -f kubernetes/deployment.yaml
-   ```
+Or manually trigger a deploy in the Render dashboard.
 
 ## Project Structure
 
 ```
 arrgh-n8n/
 ├── docker-compose.yml     # Local development setup
-├── .env.example          # Environment variables template
-├── kubernetes/           # GKE deployment files
-│   ├── namespace.yaml    # Kubernetes namespace
-│   ├── configmap.yaml    # n8n configuration
-│   ├── secrets.yaml      # Sensitive credentials
-│   ├── deployment.yaml   # n8n deployment (1 CPU, 2GB RAM)
-│   └── service.yaml      # LoadBalancer service
+├── render.yaml           # Render deployment blueprint
+├── render/               # Render deployment files
+│   ├── n8n/
+│   │   └── Dockerfile    # n8n container configuration
+│   └── README.md         # Render deployment guide
 ├── README.md            # This file
-├── PLANNING.md          # Original architecture planning
+├── CLAUDE.md            # Claude Code project instructions
 └── .gitignore          # Git ignore rules
 ```
 
 ## Database Configuration
 
-This setup uses Supabase for the production database:
-- **Why Supabase**: Managed PostgreSQL, easy setup, generous free tier
-- **Free tier**: 500MB storage, suitable for personal use
-- **Connection**: Direct connection on port 5432
+This setup uses Cloud SQL for the production database:
+- **Why Cloud SQL**: Managed PostgreSQL, reliable, shared with other services
+- **Connection**: Direct connection on port 5432 at 35.225.58.181
+- **Access**: Configured to allow connections from Render
 
 ## Security Considerations
 
@@ -173,10 +156,10 @@ This setup uses Supabase for the production database:
 - **Port 5678 in use**: Change port in docker-compose.yml
 - **Database connection failed**: Ensure PostgreSQL container is running
 
-### GKE Issues
-- **Pod not starting**: Check logs with `kubectl logs`
-- **No external IP**: Ensure GKE has permission to create load balancers
-- **Database connection failed**: Verify Supabase credentials and firewall rules
+### Render Issues
+- **Service not starting**: Check logs in Render dashboard
+- **Database connection failed**: Verify Cloud SQL firewall rules and credentials
+- **Build failures**: Check Dockerfile paths in render.yaml
 
 ### Common Commands
 
@@ -185,38 +168,34 @@ This setup uses Supabase for the production database:
 docker-compose logs -f n8n    # View logs
 docker-compose restart n8n    # Restart n8n
 
-# GKE
-kubectl describe pod -n n8n   # Detailed pod info
-kubectl scale deployment/n8n --replicas=0 -n n8n  # Stop n8n
-kubectl scale deployment/n8n --replicas=1 -n n8n  # Start n8n
+# Render
+render services list          # List all services
+render logs <service-id>      # View service logs
 ```
 
 ## Cost Optimization
 
-1. **Use GKE Autopilot** - Pay only for pods, not nodes
-2. **Single replica** - Sufficient for personal use
-3. **Leverage free tier** - $74.40 monthly credit
-4. **Consider alternatives** if costs are high:
-   - Railway.app (~$5-10/month)
-   - Keep using local Docker
+1. **Use Render Starter plan** - $7/month for web service
+2. **Shared database** - No additional database costs
+3. **Auto-scaling disabled** - Keep costs predictable
+4. **Consider free tier** for small workloads
 
 ## Next Steps
 
-1. **Add custom domain** with Google Cloud DNS
-2. **Enable HTTPS** with cert-manager and Let's Encrypt
-3. **Set up backups** for Supabase database
-4. **Configure monitoring** with Google Cloud Monitoring
-5. **Add authentication** with Identity-Aware Proxy
+1. **Add custom domain** via Render dashboard
+2. **HTTPS is automatic** - SSL certificates included
+3. **Set up monitoring** with Render's built-in tools
+4. **Configure webhooks** for workflow automation
 
 ## Resources
 
 - [n8n Documentation](https://docs.n8n.io/)
-- [GKE Documentation](https://cloud.google.com/kubernetes-engine/docs)
-- [Supabase Documentation](https://supabase.com/docs)
+- [Render Documentation](https://render.com/docs)
+- [Cloud SQL Documentation](https://cloud.google.com/sql/docs)
 
 ## Support
 
 For issues with:
 - **n8n**: Visit [n8n Community](https://community.n8n.io/)
-- **GKE**: Check [Google Cloud Support](https://cloud.google.com/support)
+- **Render**: Check [Render Support](https://render.com/docs/support)
 - **This setup**: Open an issue in this repository

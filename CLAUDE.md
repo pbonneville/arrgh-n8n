@@ -6,25 +6,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is an n8n self-hosting setup supporting two deployment environments:
 - **Local development**: Docker Compose with PostgreSQL
-- **Production**: Google Kubernetes Engine (GKE) Autopilot with Supabase
+- **Production (Render)**: Render.com with Cloud SQL PostgreSQL (~$7/month cost-effective hosting)
 
-The project transitioned from Cloud Run (due to n8n initialization issues) to GKE for better compatibility.
+The project uses Render.com as the production platform for its simplicity and cost-effectiveness.
 
 ## Architecture
 
 ### Dual Environment Design
 - **Local**: `docker-compose.yml` provides isolated development with bundled PostgreSQL
-- **Production**: Kubernetes manifests in `kubernetes/` directory deploy to GKE with external Supabase database
+- **Production (Render)**: `render.yaml` blueprint deploys to Render.com with Cloud SQL database
 
 ### Configuration Strategy
 - Local uses hardcoded credentials in docker-compose.yml
-- GKE uses ConfigMap/Secret pattern separating config from sensitive data
+- Render uses environment variables with Cloud SQL database
 - Both environments use the same n8n image (`n8nio/n8n:latest`)
 
 ### Database Architecture
 - **Local**: PostgreSQL 14 container with persistent volumes
-- **Production**: External Supabase PostgreSQL with SSL connection
-- Configuration divergence handled through environment-specific manifests
+- **Production (Render)**: Cloud SQL PostgreSQL database (35.225.58.181)
+- Configuration divergence handled through environment-specific files
 
 ## Common Commands
 
@@ -46,50 +46,36 @@ docker-compose down -v
 docker-compose restart n8n
 ```
 
-### GKE Production
+### Render Production
 ```bash
-# Create cluster
-gcloud container clusters create-auto n8n-cluster --region=us-central1 --release-channel=regular
+# Deploy to Render (via Render dashboard or CLI)
+# 1. Connect GitHub repository to Render
+# 2. Create new Blueprint deployment using render.yaml
+# 3. Render will automatically provision PostgreSQL and n8n services
 
-# Connect to cluster
-gcloud container clusters get-credentials n8n-cluster --region=us-central1
+# Monitor deployment status
+render services list
 
-# Deploy all manifests
-kubectl apply -f kubernetes/
+# View service logs
+render logs <service-id>
 
-# Check deployment status
-kubectl get pods -n n8n
-kubectl get service n8n-service -n n8n
+# Update environment variables
+render env:set <service-id> KEY=value
 
-# View logs
-kubectl logs -n n8n -l app=n8n
-
-# Scale deployment
-kubectl scale deployment/n8n --replicas=0 -n n8n  # Stop
-kubectl scale deployment/n8n --replicas=1 -n n8n  # Start
-
-# Update n8n version
-kubectl set image deployment/n8n n8n=n8nio/n8n:new-version -n n8n
+# Scale services (if using paid plans)
+render services scale <service-id> --replicas=2
 ```
 
 ## Key Configuration Points
 
-### Kubernetes Secrets Management
-Before deploying to GKE, update `kubernetes/secrets.yaml`:
-- `N8N_BASIC_AUTH_PASSWORD`: Web interface password
-- `N8N_ENCRYPTION_KEY`: For credential encryption
-- `DB_POSTGRESDB_PASSWORD`: Supabase database password
-
-### Database Connection Configuration
-Edit `kubernetes/configmap.yaml` for Supabase connection:
-- `DB_POSTGRESDB_HOST`: Your Supabase host (format: db.xxxxx.supabase.co)
-- Database remains `postgres` with user `postgres` on port `5432`
-
-### Resource Limits
-GKE deployment configured for minimal cost:
-- 1 CPU, 2GB memory requests/limits
-- Single replica sufficient for personal use
-- Session affinity enabled for webhook consistency
+### Render Configuration
+Render deployment configured for cost-effectiveness (~$7/month):
+- **Database**: Uses existing Cloud SQL PostgreSQL (35.225.58.181)
+- **n8n Service**: Web service with persistent storage (5GB)
+- **Auto-generated secrets**: Authentication and encryption keys
+- **Manual secrets**: Database and SMTP credentials (set in dashboard)
+- **Custom domain**: Configure via Render dashboard
+- **SSL**: Automatically provisioned by Render
 
 ## Environment Access
 
@@ -98,10 +84,10 @@ GKE deployment configured for minimal cost:
 - Username: `admin`
 - Password: `password`
 
-### Production Access
-- Get external IP: `kubectl get service n8n-service -n n8n`
-- URL: `http://<EXTERNAL-IP>`
-- Credentials: Set in `kubernetes/secrets.yaml`
+### Production Access (Render)
+- URL: Automatically assigned by Render (e.g., `https://n8n-arrgh.onrender.com`)
+- Username: `admin`
+- Password: Check Render dashboard for auto-generated password
 
 ## Troubleshooting Context
 
@@ -109,20 +95,19 @@ GKE deployment configured for minimal cost:
 - Port 5678 conflicts: Modify `docker-compose.yml` ports section
 - Database connectivity: Ensure PostgreSQL container is healthy
 
-### Common GKE Issues
-- Pod startup failures: Check logs and verify Supabase credentials
-- No external IP: Verify GKE LoadBalancer permissions
-- Database timeouts: Confirm Supabase firewall allows connections
-
-### Health Check Configuration
-GKE deployment includes health checks on `/healthz` endpoint with extended timeouts to accommodate n8n's initialization process (120s initial delay for liveness probe).
+### Common Render Issues
+- Service startup failures: Check service logs in Render dashboard
+- Database connection errors: Verify Cloud SQL connectivity and firewall rules
+- Build failures: Ensure Dockerfile paths are correct in render.yaml
+- Environment variable issues: Check auto-generated values in dashboard
 
 ## Cost Considerations
 
-GKE deployment optimized for free tier usage:
-- Estimated $0-40/month with free tier credits
-- Single minimal resource allocation
-- Alternative platforms (Railway, Render) available if costs exceed budget
+**Render deployment** cost-effective hosting solution:
+- Estimated $7/month for starter plan (web service only)
+- Uses existing Cloud SQL database
+- No additional database costs
+- No infrastructure management required
 
 ## GitHub Actions & PR Standards
 
