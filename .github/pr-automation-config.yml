@@ -1,0 +1,75 @@
+# PR Automation Configuration for arrgh-n8n
+# This file contains repository-specific settings for the shared GitHub Actions workflows
+
+# Auto-merge configuration
+auto_merge:
+  # Enable auto-merge for specific PR types
+  enabled_for:
+    - docs     # Documentation changes
+    - chore    # Maintenance tasks
+  
+  # Explicitly disable for:
+  disabled_for:
+    - feat     # New features
+    - fix      # Bug fixes
+    - refactor # Code refactoring
+    - perf     # Performance improvements
+    - test     # Test changes
+    - build    # Build system changes
+    - ci       # CI/CD changes
+  
+  # Require all checks to pass before auto-merge
+  require_checks: true
+  
+  # Delete branch after merge
+  delete_branch_on_merge: true
+
+# PR size limits (infrastructure repos should have smaller changes)
+size_limits:
+  small:
+    max_lines: 200
+    max_files: 5
+  medium:
+    max_lines: 400
+    max_files: 10
+  large:
+    max_lines: 800
+    max_files: 15
+
+# Repository metadata
+repository:
+  type: infrastructure
+  primary_language: yaml
+  description: "n8n self-hosting infrastructure and configuration"
+
+# Custom messages
+messages:
+  size_exceeded: |
+    This PR exceeds the size limits for infrastructure changes. 
+    Please consider breaking it into smaller, more focused PRs.
+  
+  auto_merge_enabled: |
+    🤖 Auto-merge enabled for this {pr_type} PR.
+    The PR will be automatically merged once all checks pass.
+  
+  description_missing: |
+    Please provide a description for this PR following the template.
+    Infrastructure changes should clearly explain what is being modified and why.
+
+# Security scanning
+security:
+  # Patterns to flag for additional review
+  sensitive_patterns:
+    - "password"
+    - "secret"
+    - "key"
+    - "token"
+    - "credential"
+  
+  # File patterns that require security review
+  sensitive_files:
+    - "*.env*"
+    - "*secret*"
+    - "*credential*"
+    - "*.key"
+    - "*.pem"
