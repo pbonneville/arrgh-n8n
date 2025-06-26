@@ -1,5 +1,10 @@
 {
+  "createdAt": "2025-06-23T07:47:12.154Z",
+  "updatedAt": "2025-06-23T21:56:44.748Z",
+  "id": "B59fialntF5x0ZUC",
   "name": "Arrgh Email Processor",
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -57,7 +62,7 @@
         "conditions": {
           "string": [
             {
-              "value1": "={{$json.Type}}",
+              "value1": "={{ $json.body.parseJson().Type}}",
               "value2": "Notification"
             }
           ]
@@ -74,7 +79,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Parse the SNS message to extract email metadata\n// First parse the webhook body, then extract the Message field\nconst snsBody = typeof $json.body === 'string' ? JSON.parse($json.body) : $json.body;\nconst message = JSON.parse(snsBody.Message);\n\n// Extract email details from SES notification\nconst emailData = {\n  messageId: message.mail.messageId,\n  timestamp: message.mail.timestamp,\n  source: message.mail.source,\n  destination: message.mail.destination,\n  commonHeaders: message.mail.commonHeaders,\n  receipt: message.receipt,\n  s3Bucket: message.receipt.action.bucketName,\n  s3ObjectKey: message.receipt.action.objectKey\n};\n\nreturn emailData;"
+        "jsCode": " // First, let's see what we're actually receiving\n  console.log('Input data:', JSON.stringify($json, null, 2));\n\n  // Parse the SNS message from the webhook\n  let snsMessage;\n  if ($json.body) {\n    // If body is a string, parse it\n    if (typeof $json.body === 'string') {\n      const snsBody = JSON.parse($json.body);\n      snsMessage = JSON.parse(snsBody.Message);\n    } else {\n      // If body is already an object\n      snsMessage = JSON.parse($json.body.Message);\n    }\n  } else if ($json.Message) {\n    // Direct Message field\n    snsMessage = JSON.parse($json.Message);\n  } else {\n    throw new Error('Could not find SNS Message in input data');\n  }\n\n  // Extract email details from SES notification\n  const emailData = {\n    messageId: snsMessage.mail.messageId,\n    timestamp: snsMessage.mail.timestamp,\n    source: snsMessage.mail.source,\n    destination: snsMessage.mail.destination,\n    commonHeaders: snsMessage.mail.commonHeaders,\n    receipt: snsMessage.receipt,\n    // Use the messageId to construct S3 key\n    s3Bucket: \"n8n-inbound-emails-production\",\n    s3ObjectKey: \"emails/\" + snsMessage.mail.messageId\n  };\n\n  return emailData;"
       },
       "id": "ab789de3-8189-4ad2-8997-93c93b8512d7",
       "name": "Parse Email Metadata",
@@ -87,7 +92,7 @@
     },
     {
       "parameters": {
-        "url": "=https://{{$json.s3Bucket}}.s3.amazonaws.com/{{$json.s3ObjectKey}}",
+        "url": "=https://s3.us-west-2.amazonaws.com/{{ $json.s3Bucket }}/{{ $json.s3ObjectKey\n  }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "aws",
         "options": {
@@ -107,7 +112,10 @@
         260
       ],
       "credentials": {
-        "aws": "{{$vars.AWS_CREDENTIALS_NAME}}"
+        "aws": {
+          "id": "pex7iOrrjZtJ7qua",
+          "name": "AWS account"
+        }
       }
     },
     {
@@ -155,19 +163,45 @@
     },
     {
       "parameters": {
-        "jsCode": "// This is where you can add your custom email processing logic\n// The parsed email data is available in $json\n\n// Example: Log email details\nconsole.log('Received email from:', $json.from);\nconsole.log('Subject:', $json.subject);\nconsole.log('Body preview:', $json.body.substring(0, 100));\n\n// Example: Extract specific data from email body\n// const bodyText = $json.body.toLowerCase();\n// if (bodyText.includes('invoice')) {\n//   // Process as invoice\n// } else if (bodyText.includes('support')) {\n//   // Process as support ticket\n// }\n\n// Return the processed data\nreturn {\n  processed: true,\n  emailFrom: $json.from,\n  emailSubject: $json.subject,\n  receivedAt: new Date().toISOString(),\n  processingResult: 'Email logged successfully'\n};"
+        "fromEmail": "paul@paulbonneville.com",
+        "toEmail": "test@arrgh.paulbonneville.com",
+        "subject": "Test n8n Arrgh Email Parser Workflow",
+        "html": "Is this thing on?",
+        "options": {
+          "appendAttribution": true
+        }
       },
-      "id": "ec8e42bc-b131-4e1b-84f1-e6f474324880",
-      "name": "Process Email Logic",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        920,
+        500
+      ],
+      "id": "29a03a61-b607-4081-97a0-694eaedbf27b",
+      "name": "Send email",
+      "webhookId": "1db1a785-4a68-4274-b39e-4220d8fc3067",
+      "credentials": {
+        "smtp": {
+          "id": "YpSJy0T88FgRgPaT",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "# Convert JavaScript objects to Python\n  json_data = _input.first().json.to_py()\n\n  # Log email details\n  print(f\"Received email from: {json_data.get('from', '')}\")\n  print(f\"Subject: {json_data.get('subject', '')}\")\n\n  # Get body preview (first 100 characters)\n  body = json_data.get('body', '')\n  print(f\"Body preview: {body[:100]}\")\n\n  # Example: Extract specific data from email body\n  body_text = body.lower()\n  processing_type = 'general'\n\n  if 'invoice' in body_text:\n      processing_type = 'invoice'\n  elif 'support' in body_text:\n      processing_type = 'support ticket'\n\n  # Return the processed data\n  from datetime import datetime\n\n  return {\n      'processed': True,\n      'emailFrom': json_data.get('from', ''),\n      'emailSubject': json_data.get('subject', ''),\n      'receivedAt': datetime.now().isoformat(),\n      'processingResult': f'Email logged successfully as {processing_type}'\n  }"
+      },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         2240,
         260
-      ]
+      ],
+      "id": "2ff41119-d9a1-4769-9bb7-93705ddb8133",
+      "name": "Process Content"
     }
   ],
-  "pinData": {},
   "connections": {
     "Webhook": {
       "main": [
@@ -246,14 +280,19 @@
       "main": [
         [
           {
-            "node": "Process Email Logic",
+            "node": "Process Content",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Process Email Logic": {
+    "Send email": {
+      "main": [
+        []
+      ]
+    },
+    "Process Content": {
       "main": [
         [
           {
@@ -265,14 +304,15 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "f0956a2f-f8fb-4083-a18d-4ef10a07d43f",
+  "staticData": null,
   "meta": {
-    "instanceId": "46aa6b2ba090ed4169cb65c3e75a1913292d55c146104682b5b65cfe4ea94dce"
+    "templateCredsSetupCompleted": true
   },
-  "id": "B59fialntF5x0ZUC",
+  "pinData": {},
+  "versionId": "0dd62799-2127-4d9d-ae0f-35c7fab084bc",
+  "triggerCount": 1,
   "tags": []
 }

@@ -24,17 +24,17 @@ auto_merge:
   # Delete branch after merge
   delete_branch_on_merge: true
 
-# PR size limits (infrastructure repos should have smaller changes)
+# PR size limits (allow for infrastructure migrations)
 size_limits:
   small:
-    max_lines: 200
-    max_files: 5
-  medium:
-    max_lines: 400
-    max_files: 10
-  large:
-    max_lines: 800
+    max_lines: 500
     max_files: 15
+  medium:
+    max_lines: 1000
+    max_files: 25
+  large:
+    max_lines: 2000
+    max_files: 50
 
 # Repository metadata
 repository:

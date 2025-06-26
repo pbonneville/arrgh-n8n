@@ -1,7 +1,7 @@
 name: PR Validation
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, edited, synchronize, reopened]
 
 permissions:
@@ -12,18 +12,18 @@ permissions:
 jobs:
   validate-pr:
     name: Validate PR Standards
-    uses: pbonneville/arrgh-hub/.github/workflows/reusable-pr-validation.yml@main
+    uses: Paul-Bonneville-Labs/arrgh-hub/.github/workflows/reusable-pr-validation.yml@main
     with:
-      # Size configuration for infrastructure/config project (should be minimal)
-      small_max_lines: 200
-      small_max_files: 5
-      medium_max_lines: 400
-      medium_max_files: 10
-      large_max_lines: 800
-      large_max_files: 15
+      # Size configuration for infrastructure/config project (allow for migrations)
+      small_max_lines: 500
+      small_max_files: 15
+      medium_max_lines: 1000
+      medium_max_files: 25
+      large_max_lines: 2000
+      large_max_files: 50
       
-      # Feature toggles
-      enable_size_validation: true
+      # Feature toggles (disable size validation for infrastructure migration)
+      enable_size_validation: false
       enable_auto_labeling: true
       enable_description_validation: true
       enable_security_scanning: true
