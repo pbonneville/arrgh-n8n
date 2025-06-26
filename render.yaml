@@ -4,7 +4,7 @@ services:
     name: n8n
     env: docker
     plan: starter
-    dockerfilePath: ./render/n8n/Dockerfile
+    dockerfilePath: ./Dockerfile
     envVars:
       # n8n Basic Configuration
       - key: N8N_BASIC_AUTH_ACTIVE
