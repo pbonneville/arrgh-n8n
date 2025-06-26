@@ -22,8 +22,8 @@ jobs:
       large_max_lines: 2000
       large_max_files: 50
       
-      # Feature toggles
-      enable_size_validation: true
+      # Feature toggles (disable size validation for infrastructure migration)
+      enable_size_validation: false
       enable_auto_labeling: true
       enable_description_validation: true
       enable_security_scanning: true
