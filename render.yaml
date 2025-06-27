@@ -46,7 +46,7 @@ services:
       - key: DB_POSTGRESDB_PASSWORD
         sync: false  # Set manually in Render dashboard
       - key: DB_POSTGRESDB_SSL_ENABLED
-        value: false
+        value: true
       
       # Email Configuration (AWS SES)
       - key: N8N_EMAIL_MODE
