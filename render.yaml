@@ -1,5 +1,5 @@
 services:
-  # n8n Web Service (connects to existing Cloud SQL)
+  # n8n Web Service
   - type: web
     name: n8n
     env: docker
@@ -32,25 +32,25 @@ services:
       - key: EXECUTIONS_MODE
         value: regular
       
-      # Cloud SQL Database Configuration
+      # Database Configuration (Render PostgreSQL)
       - key: DB_TYPE
         value: postgresdb
-      - key: DB_POSTGRESDB_HOST
-        sync: false  # Set manually in Render dashboard
-      - key: DB_POSTGRESDB_PORT
-        value: 5432
       - key: DB_POSTGRESDB_DATABASE
-        sync: false  # Set manually in Render dashboard
-      - key: DB_POSTGRESDB_USER
-        sync: false  # Set manually in Render dashboard
+        fromDatabase:
+          name: n8n-db
+          property: database
+      - key: DB_POSTGRESDB_HOST
+        fromDatabase:
+          name: n8n-db
+          property: host
       - key: DB_POSTGRESDB_PASSWORD
-        sync: false  # Set manually in Render dashboard
-      - key: DB_POSTGRESDB_SSL_ENABLED
-        value: true
-      - key: N8N_LOG_LEVEL
-        value: debug
-      - key: DB_LOGGING_ENABLED
-        value: true
+        fromDatabase:
+          name: n8n-db
+          property: password
+      - key: DB_POSTGRESDB_USER
+        fromDatabase:
+          name: n8n-db
+          property: user
       
       # Email Configuration (AWS SES)
       - key: N8N_EMAIL_MODE
@@ -73,3 +73,8 @@ services:
         sync: false  # Set manually in Render dashboard
       - key: N8N_SMTP_PASS
         sync: false  # Set manually in Render dashboard
+
+databases:
+  - name: n8n-db
+    databaseName: n8n
+    plan: free
