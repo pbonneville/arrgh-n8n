@@ -47,6 +47,10 @@ services:
         sync: false  # Set manually in Render dashboard
       - key: DB_POSTGRESDB_SSL_ENABLED
         value: true
+      - key: N8N_LOG_LEVEL
+        value: debug
+      - key: DB_LOGGING_ENABLED
+        value: true
       
       # Email Configuration (AWS SES)
       - key: N8N_EMAIL_MODE
