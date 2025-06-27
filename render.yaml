@@ -14,7 +14,7 @@ services:
       - key: N8N_BASIC_AUTH_PASSWORD
         generateValue: true
       - key: N8N_ENCRYPTION_KEY
-        generateValue: true
+        sync: false  # Set manually in Render dashboard - MUST persist across deployments!
       - key: N8N_HOST
         fromService:
           type: web
