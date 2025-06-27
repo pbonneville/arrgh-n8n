@@ -14,7 +14,7 @@ services:
       - key: N8N_BASIC_AUTH_PASSWORD
         generateValue: true
       - key: N8N_ENCRYPTION_KEY
-        generateValue: true
+        sync: false  # Set manually in Render dashboard - MUST persist across deployments!
       - key: N8N_HOST
         fromService:
           type: web
@@ -36,13 +36,13 @@ services:
       - key: DB_TYPE
         value: postgresdb
       - key: DB_POSTGRESDB_HOST
-        value: 35.225.58.181
+        sync: false  # Set manually in Render dashboard
       - key: DB_POSTGRESDB_PORT
         value: 5432
       - key: DB_POSTGRESDB_DATABASE
-        value: n8n
+        sync: false  # Set manually in Render dashboard
       - key: DB_POSTGRESDB_USER
-        value: postgres
+        sync: false  # Set manually in Render dashboard
       - key: DB_POSTGRESDB_PASSWORD
         sync: false  # Set manually in Render dashboard
       - key: DB_POSTGRESDB_SSL_ENABLED
@@ -52,7 +52,7 @@ services:
       - key: N8N_EMAIL_MODE
         value: smtp
       - key: N8N_SMTP_HOST
-        value: email-smtp.us-east-1.amazonaws.com
+        sync: false  # Set manually in Render dashboard
       - key: N8N_SMTP_PORT
         value: 587
       - key: N8N_SMTP_SSL
@@ -60,11 +60,11 @@ services:
       - key: N8N_SMTP_STARTTLS
         value: true
       - key: N8N_DEFAULT_EMAIL
-        value: paul@paulbonneville.com
+        sync: false  # Set manually in Render dashboard
       - key: N8N_DEFAULT_EMAIL_FROM_NAME
         value: n8n
       - key: N8N_SMTP_SENDER
-        value: paul@paulbonneville.com
+        sync: false  # Set manually in Render dashboard
       - key: N8N_SMTP_USER
         sync: false  # Set manually in Render dashboard
       - key: N8N_SMTP_PASS
