@@ -51,6 +51,8 @@ services:
         value: debug
       - key: DB_LOGGING_ENABLED
         value: true
+      - key: N8N_DATABASE_TYPE
+        value: postgresdb
       
       # Email Configuration (AWS SES)
       - key: N8N_EMAIL_MODE
