@@ -33,8 +33,6 @@ services:
         value: regular
       
       # Cloud SQL Database Configuration
-      - key: DB_TYPE
-        value: postgresdb
       - key: DB_POSTGRESDB_HOST
         sync: false  # Set manually in Render dashboard
       - key: DB_POSTGRESDB_PORT
@@ -51,8 +49,6 @@ services:
         value: debug
       - key: DB_LOGGING_ENABLED
         value: true
-      - key: N8N_DATABASE_TYPE
-        value: postgresdb
       
       # Email Configuration (AWS SES)
       - key: N8N_EMAIL_MODE
