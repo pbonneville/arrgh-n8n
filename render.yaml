@@ -37,19 +37,19 @@ services:
         value: postgresdb
       - key: DB_POSTGRESDB_DATABASE
         fromDatabase:
-          name: n8n-db
+          name: arrgh-n8n-db
           property: database
       - key: DB_POSTGRESDB_HOST
         fromDatabase:
-          name: n8n-db
+          name: arrgh-n8n-db
           property: host
       - key: DB_POSTGRESDB_PASSWORD
         fromDatabase:
-          name: n8n-db
+          name: arrgh-n8n-db
           property: password
       - key: DB_POSTGRESDB_USER
         fromDatabase:
-          name: n8n-db
+          name: arrgh-n8n-db
           property: user
       
       # Email Configuration (AWS SES)
@@ -74,7 +74,3 @@ services:
       - key: N8N_SMTP_PASS
         sync: false  # Set manually in Render dashboard
 
-databases:
-  - name: n8n-db
-    databaseName: n8n
-    plan: free
