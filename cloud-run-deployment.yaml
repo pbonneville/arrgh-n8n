@@ -1,0 +1,168 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: n8n-app
+  annotations:
+    # Allow unauthenticated requests (can be changed later)
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        # Minimum instances to reduce cold starts
+        autoscaling.knative.dev/minScale: "1"
+        # Maximum instances
+        autoscaling.knative.dev/maxScale: "10"
+        # VPC connector removed - using public IP Cloud SQL
+        # Resource limits
+        run.googleapis.com/memory: "2Gi"
+        run.googleapis.com/cpu: "2"
+        # CPU allocation during request processing
+        run.googleapis.com/cpu-throttling: "false"
+        # Timeout for requests (n8n workflows can take time)
+        run.googleapis.com/timeout: "900s"
+    spec:
+      # Use our custom service account
+      serviceAccountName: n8n-cloud-run-sa@paulbonneville-com.iam.gserviceaccount.com
+      
+      containers:
+      - name: n8n
+        # Updated with latest n8n version 1.98.1
+        image: us-central1-docker.pkg.dev/paulbonneville-com/n8n-repo/n8n:latest-v1.98.1
+        
+        ports:
+        - containerPort: 8080
+          name: http1
+        
+        # Environment variables (non-secret)
+        env:
+        - name: N8N_BASIC_AUTH_ACTIVE
+          value: "true"
+        - name: N8N_BASIC_AUTH_USER
+          value: "admin"
+        - name: DB_TYPE
+          value: "postgresdb"
+        - name: DB_POSTGRESDB_PORT
+          value: "5432"
+        - name: DB_POSTGRESDB_SSL_ENABLED
+          value: "false"
+        - name: N8N_HOST
+          value: "0.0.0.0"
+        - name: N8N_PROTOCOL
+          value: "https"
+        - name: EXECUTIONS_MODE
+          value: "regular"
+        - name: N8N_METRICS
+          value: "true"
+        - name: N8N_EMAIL_MODE
+          value: "smtp"
+        - name: N8N_SMTP_PORT
+          value: "587"
+        - name: N8N_SMTP_SSL
+          value: "false"
+        - name: N8N_SMTP_STARTTLS
+          value: "true"
+        - name: N8N_DEFAULT_EMAIL_FROM_NAME
+          value: "n8n"
+        
+        # Secret environment variables
+        - name: N8N_BASIC_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: n8n-basic-auth-password
+              key: latest
+        - name: N8N_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: n8n-encryption-key
+              key: latest
+        - name: N8N_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: n8n-api-key
+              key: latest
+        
+        # Database secrets
+        - name: DB_POSTGRESDB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: n8n-db-host
+              key: latest
+        - name: DB_POSTGRESDB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: n8n-db-database
+              key: latest
+        - name: DB_POSTGRESDB_USER
+          valueFrom:
+            secretKeyRef:
+              name: n8n-db-user
+              key: latest
+        - name: DB_POSTGRESDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: n8n-db-password
+              key: latest
+        
+        # Email secrets
+        - name: N8N_SMTP_HOST
+          valueFrom:
+            secretKeyRef:
+              name: n8n-smtp-host
+              key: latest
+        - name: N8N_SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: n8n-smtp-user
+              key: latest
+        - name: N8N_SMTP_PASS
+          valueFrom:
+            secretKeyRef:
+              name: n8n-smtp-pass
+              key: latest
+        - name: N8N_DEFAULT_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: n8n-default-email
+              key: latest
+        - name: N8N_SMTP_SENDER
+          valueFrom:
+            secretKeyRef:
+              name: n8n-smtp-sender
+              key: latest
+        
+        # API Keys for integrations
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: anthropic-api-key
+              key: latest
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-access-key-id
+              key: latest
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-secret-access-key
+              key: latest
+        
+        # Resource requests
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1"
+          limits:
+            memory: "2Gi"
+            cpu: "2"
+        
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3

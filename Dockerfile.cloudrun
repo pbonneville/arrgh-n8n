@@ -1,0 +1,40 @@
+FROM n8nio/n8n:latest
+
+# Install additional packages needed for Cloud Run
+USER root
+RUN apk add --no-cache \
+    curl \
+    bash \
+    tini
+
+# Create the .n8n directory with proper permissions
+RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
+
+# Create startup script directory
+RUN mkdir -p /scripts && chown -R node:node /scripts
+
+# Copy startup script
+COPY cloud-run-startup.sh /scripts/startup.sh
+RUN chmod +x /scripts/startup.sh && chown node:node /scripts/startup.sh
+
+# Switch back to node user
+USER node
+
+# Set the working directory
+WORKDIR /home/node
+
+# Cloud Run specific environment variables
+ENV N8N_HOST=0.0.0.0
+ENV N8N_PROTOCOL=https
+ENV EXECUTIONS_MODE=regular
+ENV N8N_METRICS=true
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:$PORT/healthz || exit 1
+
+# Use tini for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Use our startup script
+CMD ["/scripts/startup.sh"]
