@@ -65,8 +65,8 @@ if [ -f ".env" ]; then
     if [ -n "$DB_HOST" ]; then
         echo "Database host: $DB_HOST"
         
-        # Check if this is a private IP (starts with 10., 172., or 192.168.)
-        if [[ $DB_HOST =~ ^10\. ]] || [[ $DB_HOST =~ ^172\. ]] || [[ $DB_HOST =~ ^192\.168\. ]]; then
+        # Check if this is a private IP (starts with 10., 172.16-31., or 192.168.)
+        if [[ $DB_HOST =~ ^10\. ]] || [[ $DB_HOST =~ ^172\.(1[6-9]|2[0-9]|3[0-1])\. ]] || [[ $DB_HOST =~ ^192\.168\. ]]; then
             echo -e "${GREEN}✅ Database uses private IP - VPC connector required${NC}"
         else
             echo -e "${YELLOW}ℹ️  Database uses public IP - VPC connector optional but recommended${NC}"

@@ -60,20 +60,22 @@ else
     exit 1
 fi
 
-# Create health check endpoint
-create_health_check() {
-    log "Setting up health check endpoint..."
+# Setup n8n for Cloud Run health checks
+setup_health_checks() {
+    log "Configuring n8n for Cloud Run health checks..."
     
-    # Create a simple health check that n8n can serve
-    # This will be available at /healthz
+    # n8n serves its web interface at / which acts as a health check
+    # Additional CORS configuration for cloud environments
     export N8N_ADDITIONAL_CORS_ORIGINS="*"
+    
+    log "Health checks will use n8n's built-in web interface at /"
 }
 
 # Trap signals for graceful shutdown
 trap 'log "Received shutdown signal, stopping n8n..."; kill -TERM $PID; wait $PID' SIGTERM SIGINT
 
-# Create health check
-create_health_check
+# Setup health checks
+setup_health_checks
 
 log "🎯 Starting n8n server..."
 
@@ -85,11 +87,11 @@ PID=$!
 log "Waiting for n8n to be ready..."
 sleep 10
 
-# Check if n8n is responding
-if curl -f "http://localhost:$PORT/healthz" >/dev/null 2>&1; then
-    log "✅ n8n is running and healthy"
+# Check if n8n is responding at root path
+if curl -f "http://localhost:$PORT/" >/dev/null 2>&1; then
+    log "✅ n8n web interface is responding - healthy"
 else
-    warn "Health check failed, but continuing startup..."
+    warn "n8n web interface not yet ready, but continuing startup..."
 fi
 
 log "🎉 n8n startup complete!"

@@ -157,12 +157,12 @@ spec:
             memory: "2Gi"
             cpu: "2"
         
-        # Liveness probe
+        # Liveness probe - uses n8n's web interface as health check
         livenessProbe:
           httpGet:
             path: /
-            port: 8080
-          initialDelaySeconds: 60
+            port: http1
+          initialDelaySeconds: 90
           periodSeconds: 30
-          timeoutSeconds: 10
+          timeoutSeconds: 15
           failureThreshold: 3

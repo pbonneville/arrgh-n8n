@@ -22,7 +22,7 @@ while true; do
     
     # Try to access the site
     echo -e "\n🌍 Testing HTTPS Access:"
-    if curl -I https://n8n.paulbonneville.com --max-time 5 -s | grep -q "HTTP/2 200"; then
+    if curl -I https://n8n.paulbonneville.com --max-time 5 -s | grep -q "HTTP/[0-9\\.]\\+ 200"; then
         HEADERS=$(curl -I https://n8n.paulbonneville.com --max-time 5 -s)
         if echo "$HEADERS" | grep -q "x-render-origin-server"; then
             echo "⚠️  Still serving from Render"
