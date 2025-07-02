@@ -14,6 +14,14 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}🚀 n8n Cloud Run Migration Setup${NC}"
 echo "========================================"
 
+# Load environment variables
+if [ -f ".env" ]; then
+    echo "Loading environment variables from .env..."
+    export $(grep -v '^#' .env | xargs)
+else
+    echo -e "${YELLOW}⚠️  No .env file found. Using defaults or gcloud config.${NC}"
+fi
+
 # Check if gcloud is installed
 if ! command -v gcloud &> /dev/null; then
     echo -e "${RED}❌ gcloud CLI not found. Please install it first.${NC}"
@@ -21,17 +29,20 @@ if ! command -v gcloud &> /dev/null; then
     exit 1
 fi
 
-# Get current project
-PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
+# Get configuration (environment variables take precedence)
+PROJECT_ID=${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null)}
+REGION=${REGION:-us-central1}
+REPO_NAME=${REPO_NAME:-n8n-repo}
+
 if [ -z "$PROJECT_ID" ]; then
     echo -e "${RED}❌ No Google Cloud project set. Please run: gcloud config set project YOUR_PROJECT_ID${NC}"
+    echo "Or set PROJECT_ID in your .env file"
     exit 1
 fi
 
 echo -e "${GREEN}📦 Using project: ${PROJECT_ID}${NC}"
 
-# Set default region (can be overridden)
-REGION=${REGION:-us-central1}
+# Configuration loaded above
 echo -e "${GREEN}🌍 Using region: ${REGION}${NC}"
 
 echo ""
@@ -59,7 +70,7 @@ echo ""
 echo -e "${YELLOW}Step 2: Creating Artifact Registry repository...${NC}"
 
 # Create Artifact Registry repository
-REPO_NAME="n8n-repo"
+REPO_NAME=${REPO_NAME:-n8n-repo}
 if ! gcloud artifacts repositories describe "$REPO_NAME" --location="$REGION" --project="$PROJECT_ID" &>/dev/null; then
     gcloud artifacts repositories create "$REPO_NAME" \
         --repository-format=docker \

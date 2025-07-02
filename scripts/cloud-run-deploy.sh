@@ -15,11 +15,19 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}🚀 Deploying n8n to Google Cloud Run${NC}"
 echo "====================================="
 
-# Get current project and region (customize as needed)
-PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
-REGION=${REGION:-us-central1}  # Change this to your preferred region
-REPO_NAME="n8n-repo"
-SERVICE_NAME="n8n-app"
+# Load environment variables
+if [ -f ".env" ]; then
+    echo "Loading environment variables from .env..."
+    export $(grep -v '^#' .env | xargs)
+else
+    echo -e "${YELLOW}⚠️  No .env file found. Using defaults or gcloud config.${NC}"
+fi
+
+# Get configuration (environment variables take precedence)
+PROJECT_ID=${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null)}
+REGION=${REGION:-us-central1}
+REPO_NAME=${REPO_NAME:-n8n-repo}
+SERVICE_NAME=${SERVICE_NAME:-n8n-app}
 
 if [ -z "$PROJECT_ID" ]; then
     echo -e "${RED}❌ No Google Cloud project set. Please run the setup script first.${NC}"
@@ -52,18 +60,9 @@ echo ""
 
 echo -e "${YELLOW}Step 3: Updating deployment configuration...${NC}"
 
-# Create deployment file from template
-if [ ! -f "cloud-run-deployment.yaml" ]; then
-    echo -e "${RED}❌ cloud-run-deployment.yaml not found${NC}"
-    exit 1
-fi
-
-# Create a deployment-specific copy
-cp cloud-run-deployment.yaml cloud-run-deployment-final.yaml
-
-# Replace image placeholder with actual image
-sed -i.tmp "s|REGION-docker.pkg.dev/PROJECT_ID/n8n-repo/n8n:latest|$IMAGE_TAG|g" cloud-run-deployment-final.yaml
-rm cloud-run-deployment-final.yaml.tmp 2>/dev/null || true
+# Generate deployment configuration from template
+./scripts/generate-configs.sh
+cp cloud-run-deployment-generated.yaml cloud-run-deployment-final.yaml
 
 echo -e "${GREEN}✅ Deployment configuration ready${NC}"
 echo ""

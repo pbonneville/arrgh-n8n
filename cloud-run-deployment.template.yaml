@@ -1,9 +1,7 @@
-# This file is auto-generated from cloud-run-deployment.template.yaml
-# Edit the template file instead of this one
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: n8n-app
+  name: ${SERVICE_NAME}
   annotations:
     # Allow unauthenticated requests (can be changed later)
     run.googleapis.com/ingress: all
@@ -25,12 +23,12 @@ spec:
         run.googleapis.com/timeout: "900s"
     spec:
       # Use our custom service account
-      serviceAccountName: n8n-cloud-run-sa@paulbonneville-com.iam.gserviceaccount.com
+      serviceAccountName: n8n-cloud-run-sa@${PROJECT_ID}.iam.gserviceaccount.com
       
       containers:
       - name: n8n
         # Updated with latest n8n version 1.98.1
-        image: us-central1-docker.pkg.dev/paulbonneville-com/n8n-repo/n8n:latest-v1.98.1
+        image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/n8n:latest
         
         ports:
         - containerPort: 8080

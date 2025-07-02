@@ -70,6 +70,20 @@ docker-compose down -v
 
 For a complete step-by-step migration guide, see: **[Cloud Run Migration Guide](docs/guides/CLOUD-RUN-MIGRATION.md)**
 
+#### Configuration Setup
+1. **Copy environment template**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit configuration** (required values)
+   ```bash
+   # Edit .env with your specific values
+   PROJECT_ID=your-gcp-project-id
+   REGION=us-central1
+   # ... other variables
+   ```
+
 #### One-Command Setup
 ```bash
 # 1. Set up infrastructure
@@ -104,20 +118,43 @@ gcloud beta run domain-mappings create \
 
 ```
 arrgh-n8n/
-├── docker-compose.yml          # Local development setup
-├── Dockerfile.cloudrun         # Cloud Run optimized container
-├── cloud-run-deployment.yaml   # Cloud Run service configuration
-├── scripts/                    # Deployment automation
-│   ├── cloud-run-setup.sh     # Infrastructure setup
-│   ├── cloud-run-secrets.sh   # Secret Manager configuration
-│   ├── cloud-run-deploy.sh    # Build and deployment
-│   └── monitor-domain.sh       # Domain migration monitoring
+├── docker-compose.yml                 # Local development setup
+├── Dockerfile.cloudrun                # Cloud Run optimized container
+├── cloud-run-deployment.template.yaml # Knative service template with env variables
+├── cloud-run-deployment.yaml          # Generated Cloud Run service config
+├── .env.example                       # Environment variables template
+├── config/
+│   └── environments/                  # Environment-specific configurations
+│       ├── production.env            # Production defaults
+│       └── development.env           # Development defaults
+├── scripts/                           # Deployment automation
+│   ├── cloud-run-setup.sh            # Infrastructure setup
+│   ├── cloud-run-secrets.sh          # Secret Manager configuration
+│   ├── cloud-run-deploy.sh           # Build and deployment
+│   ├── generate-configs.sh           # Template processing utility
+│   └── monitor-domain.sh              # Domain migration monitoring
 ├── docs/
-│   ├── guides/                 # Migration and setup guides
-│   └── audit/                  # Migration verification
-├── workflows/                  # n8n workflow backups
-└── README.md                   # This file
+│   ├── guides/                        # Migration and setup guides
+│   └── audit/                         # Migration verification
+├── workflows/                         # n8n workflow backups
+└── README.md                          # This file
 ```
+
+## Configuration Architecture
+
+This deployment uses **environment variable substitution** for secure, flexible configuration:
+
+- **Template files** (`.template.yaml`) contain variables like `${PROJECT_ID}`, `${REGION}`
+- **Environment files** (`.env`, `config/environments/*.env`) define actual values  
+- **Generated files** are created by substituting variables into templates
+- **Cloud Run** deploys using Knative service definitions (not raw Kubernetes YAML)
+
+This approach ensures:
+✅ **No hardcoded credentials** in source control  
+✅ **Easy multi-environment deployments** (dev, staging, prod)  
+✅ **Secure secret management** via Google Secret Manager  
+
+See the [Configuration Guide](docs/guides/CONFIGURATION-GUIDE.md) for complete setup instructions.
 
 ## Database Configuration
 

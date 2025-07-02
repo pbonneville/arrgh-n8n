@@ -20,8 +20,12 @@ if [ ! -f ".env" ]; then
     exit 1
 fi
 
-# Get current project
-PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
+# Load environment variables
+echo "Loading environment variables from .env..."
+export $(grep -v '^#' .env | xargs)
+
+# Get configuration (environment variables take precedence)
+PROJECT_ID=${PROJECT_ID:-$(gcloud config get-value project 2>/dev/null)}
 if [ -z "$PROJECT_ID" ]; then
     echo -e "${RED}❌ No Google Cloud project set. Please run the setup script first.${NC}"
     exit 1

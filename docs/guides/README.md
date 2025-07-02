@@ -8,6 +8,9 @@ This directory contains comprehensive guides for migrating n8n from Render.com t
 - **`CLOUD-RUN-MIGRATION.md`** - Complete migration guide with step-by-step instructions
 - **`migration-success.md`** - Post-migration summary and success report
 
+### ⚙️ Configuration Management
+- **`CONFIGURATION-GUIDE.md`** - Environment variables and template configuration guide
+
 ### 🌐 Domain Configuration  
 - **`DNS-UPDATE-GUIDE.md`** - Instructions for updating DNS records to point to Cloud Run
 
@@ -38,9 +41,11 @@ The migration successfully moved n8n from Render.com to Google Cloud Run with:
 ## Key Files Referenced
 
 - `/scripts/` - All automation scripts
-- `cloud-run-deployment.yaml` - Kubernetes service configuration
+- `cloud-run-deployment.template.yaml` - Template for Cloud Run service configuration
+- `cloud-run-deployment.yaml` - Generated Cloud Run service configuration
 - `Dockerfile.cloudrun` - Cloud Run optimized container
-- `workflow-upload.json` - Workflow configuration for API import
+- `.env.example` - Environment variables template
+- `config/environments/` - Environment-specific configuration files
 
 ## Support
 
