@@ -6,25 +6,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is an n8n self-hosting setup supporting two deployment environments:
 - **Local development**: Docker Compose with PostgreSQL
-- **Production (Render)**: Render.com with Cloud SQL PostgreSQL (~$7/month cost-effective hosting)
+- **Production (Google Cloud Run)**: Google Cloud Run with Cloud SQL PostgreSQL (~$50/month optimized hosting)
 
-The project uses Render.com as the production platform for its simplicity and cost-effectiveness.
+The project uses Google Cloud Run as the production platform for its scalability, cost optimization, and enterprise features.
 
 ## Architecture
 
 ### Dual Environment Design
 - **Local**: `docker-compose.yml` provides isolated development with bundled PostgreSQL
-- **Production (Render)**: `render.yaml` blueprint deploys to Render.com with Cloud SQL database
+- **Production (Google Cloud Run)**: `cloud-run-deployment.yaml` deploys to Google Cloud Run with Cloud SQL database
 
 ### Configuration Strategy
 - Local uses hardcoded credentials in docker-compose.yml
-- Render uses environment variables with Cloud SQL database
+- Google Cloud Run uses environment variables with Cloud SQL database and Google Secret Manager
 - Both environments use the same n8n image (`n8nio/n8n:latest`)
 
 ### Database Architecture
 - **Local**: PostgreSQL 14 container with persistent volumes
-- **Production (Render)**: Cloud SQL PostgreSQL database (35.225.58.181)
-- Configuration divergence handled through environment-specific files
+- **Production (Google Cloud Run)**: Cloud SQL PostgreSQL database (35.225.58.181)
+- Configuration divergence handled through environment-specific files and templates
 
 ## Common Commands
 
@@ -46,36 +46,34 @@ docker-compose down -v
 docker-compose restart n8n
 ```
 
-### Render Production
+### Google Cloud Run Production
 ```bash
-# Deploy to Render (via Render dashboard or CLI)
-# 1. Connect GitHub repository to Render
-# 2. Create new Blueprint deployment using render.yaml
-# 3. Render will automatically provision PostgreSQL and n8n services
+# Deploy to Google Cloud Run
+./scripts/cloud-run-deploy.sh
 
 # Monitor deployment status
-render services list
+gcloud run services list --region=us-central1
 
 # View service logs
-render logs <service-id>
+gcloud run logs read --service=n8n-app --region=us-central1
 
 # Update environment variables
-render env:set <service-id> KEY=value
+gcloud run services update n8n-app --region=us-central1 --set-env-vars="KEY=value"
 
-# Scale services (if using paid plans)
-render services scale <service-id> --replicas=2
+# Scale services (auto-scaling configured)
+gcloud run services update n8n-app --region=us-central1 --max-instances=10 --min-instances=1
 ```
 
 ## Key Configuration Points
 
-### Render Configuration
-Render deployment configured for cost-effectiveness (~$7/month):
+### Google Cloud Run Configuration
+Google Cloud Run deployment configured for cost optimization (~$50/month):
 - **Database**: Uses existing Cloud SQL PostgreSQL (35.225.58.181)
-- **n8n Service**: Web service with persistent storage (5GB)
-- **Auto-generated secrets**: Authentication and encryption keys
-- **Manual secrets**: Database and SMTP credentials (set in dashboard)
-- **Custom domain**: Configure via Render dashboard
-- **SSL**: Automatically provisioned by Render
+- **n8n Service**: Cloud Run service with auto-scaling (1-10 instances)
+- **Resource allocation**: 2 CPU, 2GB RAM per instance
+- **Secrets**: Stored in Google Secret Manager
+- **Custom domain**: Configure via Cloud Run domain mappings
+- **SSL**: Automatically provisioned by Google
 
 ## Environment Access
 
@@ -84,10 +82,10 @@ Render deployment configured for cost-effectiveness (~$7/month):
 - Username: `admin`
 - Password: `password`
 
-### Production Access (Render)
-- URL: Automatically assigned by Render (e.g., `https://n8n-arrgh.onrender.com`)
+### Production Access (Google Cloud Run)
+- URL: https://n8n.paulbonneville.com (custom domain) or Cloud Run assigned URL
 - Username: `admin`
-- Password: Check Render dashboard for auto-generated password
+- Password: Check Google Secret Manager for `n8n-basic-auth-password`
 
 ## Troubleshooting Context
 
@@ -95,19 +93,20 @@ Render deployment configured for cost-effectiveness (~$7/month):
 - Port 5678 conflicts: Modify `docker-compose.yml` ports section
 - Database connectivity: Ensure PostgreSQL container is healthy
 
-### Common Render Issues
-- Service startup failures: Check service logs in Render dashboard
-- Database connection errors: Verify Cloud SQL connectivity and firewall rules
-- Build failures: Ensure Dockerfile paths are correct in render.yaml
-- Environment variable issues: Check auto-generated values in dashboard
+### Common Google Cloud Run Issues
+- Service startup failures: Check service logs with `gcloud run logs read --service=n8n-app`
+- Database connection errors: Verify Cloud SQL connectivity and Secret Manager configuration
+- Build failures: Ensure Docker image builds correctly for linux/amd64 platform
+- Environment variable issues: Check Secret Manager values and service configuration
 
 ## Cost Considerations
 
-**Render deployment** cost-effective hosting solution:
-- Estimated $7/month for starter plan (web service only)
+**Google Cloud Run deployment** cost-optimized hosting solution:
+- Estimated $50/month for production workload (reduced from $600/month)
 - Uses existing Cloud SQL database
-- No additional database costs
-- No infrastructure management required
+- Auto-scaling reduces costs during low usage
+- No VPC connector costs (direct database connection)
+- Enterprise features included (monitoring, logging, security)
 
 ## GitHub Actions & PR Standards
 
