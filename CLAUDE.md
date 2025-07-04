@@ -23,7 +23,7 @@ The project uses Google Cloud Run as the production platform for its scalability
 
 ### Database Architecture
 - **Local**: PostgreSQL 14 container with persistent volumes
-- **Production (Google Cloud Run)**: Cloud SQL PostgreSQL database (35.225.58.181)
+- **Production (Google Cloud Run)**: Cloud SQL PostgreSQL database (connection via Cloud SQL Auth Proxy)
 - Configuration divergence handled through environment-specific files and templates
 
 ## Common Commands
