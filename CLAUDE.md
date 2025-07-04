@@ -58,7 +58,7 @@ gcloud run services list --region=us-central1
 gcloud run logs read --service=n8n-app --region=us-central1
 
 # Update environment variables
-gcloud run services update n8n-app --region=us-central1 --set-env-vars="KEY=value"
+gcloud run services update n8n-app --region=us-central1 --update-env-vars="KEY=value"
 
 # Scale services (auto-scaling configured)
 gcloud run services update n8n-app --region=us-central1 --max-instances=10 --min-instances=1
