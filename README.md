@@ -96,6 +96,8 @@ For a complete step-by-step migration guide, see: **[Cloud Run Migration Guide](
 ./scripts/cloud-run-deploy.sh
 ```
 
+**Note**: The deployment script automatically generates the final Cloud Run configuration from the template file using your environment variables. No manual configuration file editing is required.
+
 ### Production Features
 - **Auto-scaling**: 1-10 instances based on traffic
 - **High performance**: 2 CPU, 2GB RAM per instance
@@ -121,7 +123,6 @@ arrgh-n8n/
 ├── docker-compose.yml                 # Local development setup
 ├── Dockerfile.cloudrun                # Cloud Run optimized container
 ├── cloud-run-deployment.template.yaml # Knative service template with env variables
-├── cloud-run-deployment.yaml          # Generated Cloud Run service config
 ├── .env.example                       # Environment variables template
 ├── config/
 │   └── environments/                  # Environment-specific configurations
@@ -144,10 +145,10 @@ arrgh-n8n/
 
 This deployment uses **environment variable substitution** for secure, flexible configuration:
 
-- **Template files** (`.template.yaml`) contain variables like `${PROJECT_ID}`, `${REGION}`
+- **Template files** (`cloud-run-deployment.template.yaml`) contain variables like `${PROJECT_ID}`, `${REGION}`
 - **Environment files** (`.env`, `config/environments/*.env`) define actual values  
-- **Generated files** are created by substituting variables into templates
-- **Cloud Run** deploys using Knative service definitions (not raw Kubernetes YAML)
+- **Generated files** are created dynamically by `generate-configs.sh` during deployment
+- **Cloud Run** deploys using the generated Knative service definitions
 
 This approach ensures:
 ✅ **No hardcoded credentials** in source control  
