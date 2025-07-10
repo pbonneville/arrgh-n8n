@@ -165,6 +165,6 @@ spec:
             path: /
             port: 8080
           initialDelaySeconds: 60
-          periodSeconds: 30
+          periodSeconds: 300
           timeoutSeconds: 10
           failureThreshold: 3
