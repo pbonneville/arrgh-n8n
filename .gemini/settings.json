@@ -1,0 +1,41 @@
+{
+    "mcpServers": {
+        "puppeteer": {
+        "command": "npx",
+        "args": [
+            "@modelcontextprotocol/server-puppeteer"
+        ]
+        },
+        "gdrive": {
+        "command": "npx",
+        "args": [
+            "@modelcontextprotocol/server-gdrive"
+        ],
+        "env": {
+            "GOOGLE_APPLICATION_CREDENTIALS": "/Users/paulbonneville/.config/gcloud/mcp-gdrive-service-account.json"
+        }
+        },
+        "n8n-api": {
+        "command": "npx",
+        "args": [
+            "-y",
+            "@ahmad.soliman/mcp-n8n-server"
+        ],
+        "env": {
+            "N8N_HOST_URL": "https://n8n.paulbonneville.com",
+            "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYTRjNjZkYS0yYmM1LTQ2MzctOWQ3NS0wNmM4NWNjYjZiMWMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUxNDQyODk5fQ.ECI0SdieLQPgg4feT6d4dIgjERipMxM5s5eopgpYQZ4"
+        }
+        },
+        "n8n-workflow-builder": {
+        "command": "npx",
+        "args": [
+            "-y",
+            "@kernel.salacoste/n8n-workflow-builder"
+        ],
+        "env": {
+            "N8N_HOST": "https://n8n.paulbonneville.com/api/v1/",
+            "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYTRjNjZkYS0yYmM1LTQ2MzctOWQ3NS0wNmM4NWNjYjZiMWMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUxNDQyODk5fQ.ECI0SdieLQPgg4feT6d4dIgjERipMxM5s5eopgpYQZ4"
+        }
+        }
+    }
+}
