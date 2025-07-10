@@ -1,6 +1,9 @@
 # Private files - Store sensitive files here that should never be committed
 .private/
 
+# Gemini AI configuration (contains sensitive data)
+.gemini/
+
 # Environment files
 .env
 .env.local
