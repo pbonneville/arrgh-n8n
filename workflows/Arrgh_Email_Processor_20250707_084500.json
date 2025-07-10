@@ -1,0 +1,429 @@
+{
+  "createdAt": "2025-07-02T08:06:12.532Z",
+  "updatedAt": "2025-07-02T22:32:20.090Z",
+  "id": "cplr7F8xgOQ0lwpa",
+  "name": "Arrgh Email Processor",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inbound-email",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "23984477-973e-4060-84ea-082617395dee",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -440,
+        100
+      ],
+      "typeVersion": 1,
+      "webhookId": "79eda4ba-c991-4437-9afe-f53e0bafb88d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.headers['x-amz-sns-message-type'] }}",
+              "value2": "SubscriptionConfirmation"
+            }
+          ]
+        }
+      },
+      "id": "1b9419e0-37e0-4271-af5d-adf89facd230",
+      "name": "Is Subscription Confirmation?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -220,
+        100
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.parseJson().SubscribeURL}}",
+        "options": {}
+      },
+      "id": "04221f1d-8a6e-4a39-be5b-874132ed9b39",
+      "name": "Confirm Subscription",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.parseJson().Type}}",
+              "value2": "Notification"
+            }
+          ]
+        }
+      },
+      "id": "de77b66d-f6d7-4de9-bf3d-5a11323447a7",
+      "name": "Is Email Notification?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        0,
+        200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=Email processed successfully: \n{{ $json.output }}",
+        "options": {}
+      },
+      "id": "7d138cd6-b5c3-4462-941b-9e499735a948",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1220,
+        200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Subscription confirmed",
+        "options": {}
+      },
+      "id": "ddafa2d9-79aa-4d31-bfef-90dee2cdad25",
+      "name": "Subscription Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        220,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "fromEmail": "paul@paulbonneville.com",
+        "toEmail": "test@arrgh.paulbonneville.com",
+        "subject": "HTML Test Email - Entity Extraction Test",
+        "html": "<html><body><h1>Business Meeting Invitation</h1><p>Dear Team,</p><p><strong>John Smith</strong> from <em>Acme Corporation</em> has invited us to attend the <strong>Annual Tech Summit 2025</strong> in <a href=\"https://example.com\">San Francisco, California</a> on March 15-17, 2025.</p><ul><li>Event: Annual Tech Summit 2025</li><li>Organizer: Acme Corporation</li><li>Location: Moscone Center, San Francisco</li><li>Attendees: John Smith (CEO), Sarah Johnson (CTO)</li></ul><h3>Products to be Showcased</h3><p>They will be demonstrating their new <code>CloudSync Pro</code> software and the <strong>DataVault 3000</strong> hardware solution.</p><h3>Meeting Details</h3><blockquote>Please confirm attendance for the product demonstration at the Google Inc headquarters in Mountain View.</blockquote><p>Best regards,<br><strong>Alice Cooper</strong><br>Microsoft Corporation<br>Event Coordinator</p></body></html>",
+        "options": {}
+      },
+      "id": "db5287b1-fdc4-4b13-aa47-418a61010c9d",
+      "name": "Send email to test workflow",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [
+        -440,
+        -120
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "smtp": {
+          "id": "sC34ufIj3qJLoA95",
+          "name": "AWS SES SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import json\nimport re\n\ndef parse_json_strings(obj):\n    \"\"\"Recursively parse JSON strings in nested objects\"\"\"\n    if isinstance(obj, dict):\n        result = {}\n        for key, value in obj.items():\n            result[key] = parse_json_strings(value)\n        return result\n    elif isinstance(obj, list):\n        return [parse_json_strings(item) for item in obj]\n    elif isinstance(obj, str):\n        # Try to parse as JSON if it looks like JSON\n        stripped = obj.strip()\n        if (stripped.startswith('{') and stripped.endswith('}')) or \\\n           (stripped.startswith('[') and stripped.endswith(']')):\n            try:\n                parsed = json.loads(obj)\n                return parse_json_strings(parsed)  # Recursively parse nested JSON\n            except (json.JSONDecodeError, ValueError):\n                pass\n        return obj\n    else:\n        return obj\n\ndef parse_email_content(raw_content):\n    \"\"\"Custom email parser that works in Pyodide environment\"\"\"\n    if not isinstance(raw_content, str):\n        return raw_content\n    \n    try:\n        # Split headers and body (empty line separates them)\n        parts = raw_content.split('\\n\\n', 1)\n        if len(parts) != 2:\n            # Try with \\r\\n\\r\\n\n            parts = raw_content.split('\\r\\n\\r\\n', 1)\n        \n        if len(parts) == 2:\n            headers_text, body = parts\n        else:\n            # If no clear separation, treat everything as headers\n            headers_text = raw_content\n            body = \"\"\n        \n        # Parse headers\n        headers = {}\n        current_header = None\n        current_value = \"\"\n        \n        for line in headers_text.split('\\n'):\n            line = line.rstrip('\\r')\n            \n            # Check if this is a continuation line (starts with space or tab)\n            if line.startswith((' ', '\\t')) and current_header:\n                current_value += ' ' + line.strip()\n            else:\n                # Save previous header if exists\n                if current_header:\n                    headers[current_header] = current_value.strip()\n                \n                # Parse new header\n                if ':' in line:\n                    header_name, header_value = line.split(':', 1)\n                    current_header = header_name.strip()\n                    current_value = header_value.strip()\n                else:\n                    current_header = None\n        \n        # Don't forget the last header\n        if current_header:\n            headers[current_header] = current_value.strip()\n        \n        # Clean up the body (remove quoted-printable encoding artifacts)\n        clean_body = body.replace('=\\n', '').replace('=\\r\\n', '')\n        \n        # Decode some common quoted-printable sequences\n        clean_body = clean_body.replace('=3D', '=')\n        clean_body = clean_body.replace('=20', ' ')\n        \n        # Determine content type\n        content_type = headers.get('Content-Type', '').split(';')[0].strip()\n        if not content_type:\n            content_type = 'text/plain'\n        \n        return {\n            \"headers\": headers,\n            \"body\": clean_body,\n            \"content_type\": content_type,\n            \"is_multipart\": 'multipart' in content_type.lower()\n        }\n        \n    except Exception as e:\n        print(f\"Email parsing failed: {e}\")\n        return raw_content\n\n# Get the input data from webhook\njson_data = _input.first().json.to_py()\nprint('Input data:', json.dumps(json_data, indent=2))\n\n# Parse the SNS message from the webhook\nsns_message = None\nif 'body' in json_data:\n    # If body is a string, parse it\n    if isinstance(json_data['body'], str):\n        sns_body = json.loads(json_data['body'])\n        sns_message = json.loads(sns_body['Message'])\n    else:\n        # If body is already an object\n        sns_message = json.loads(json_data['body']['Message'])\nelif 'Message' in json_data:\n    # Direct Message field\n    sns_message = json.loads(json_data['Message'])\nelse:\n    raise Exception('Could not find SNS Message in input data')\n\n# Recursively parse any JSON strings within the message\nsns_message = parse_json_strings(sns_message)\n\n# Parse the email content if it exists\nif 'content' in sns_message:\n    sns_message['content'] = parse_email_content(sns_message['content'])\n\n# Add S3 information to the message object\nsns_message['s3Bucket'] = 'n8n-inbound-emails-production'\nsns_message['s3ObjectKey'] = 'emails/' + sns_message['mail']['messageId']\n\nprint(f\"Extracted complete message object with S3 info:\")\nprint(f\"  Message ID: {sns_message['mail']['messageId']}\")\nprint(f\"  S3 Location: s3://{sns_message['s3Bucket']}/{sns_message['s3ObjectKey']}\")\n\n# Return the entire message object as structured Python objects\nreturn [sns_message]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        200
+      ],
+      "id": "a3c8e5cb-b341-4902-a3de-3c4c696c98da",
+      "name": "Extract Email Data"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.content.body }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "organizations",
+              "description": "Any businesses or organizations mentioned in the content"
+            },
+            {
+              "name": "people",
+              "description": "any people mentioned in the content"
+            },
+            {
+              "name": "products",
+              "description": "any products or services mentioned in the content"
+            },
+            {
+              "name": "events",
+              "description": "any calendar based events"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        300
+      ],
+      "id": "0f511436-92c2-403e-a608-7f44176afbde",
+      "name": "Information Extractor",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {
+          "thinking": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        380,
+        480
+      ],
+      "id": "ba0d482f-5c3c-41c7-9a75-e6717c04d7df",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "MNrS5wBQiIWYMHAD",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "arrgh@paulbonneville.com",
+        "toEmail": "paul@paulbonneville.com",
+        "subject": "Arrgh! Email newsletter was parsed",
+        "html": "=<h3>Any email newsletter was successfully processed by Arrgh!:<h3> \n\n<p><strong>{{ $json.Subject }}<br>{{ $json.From }}</strong></p>\n<hr>\n<ul>\n<li>{{ $json.organizations }}</li>\n<li>{{ $json.people }}</li>\n<li>{{ $json.products }}</li>\n<li>{{ $json.events }}</li>\n</ul>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1020,
+        200
+      ],
+      "id": "c6e363b0-a89e-4ab5-9373-f76cb8ced8a3",
+      "name": "Send email",
+      "webhookId": "3f1de966-481b-4cc2-b2ac-9171b6cc5659",
+      "credentials": {
+        "smtp": {
+          "id": "sC34ufIj3qJLoA95",
+          "name": "AWS SES SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        820,
+        200
+      ],
+      "id": "67ce01c0-e399-42ca-8d16-87dbb896574f",
+      "name": "Aggregate"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Subscription Confirmation?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Subscription Confirmation?": {
+      "main": [
+        [
+          {
+            "node": "Confirm Subscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Email Notification?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Subscription": {
+      "main": [
+        [
+          {
+            "node": "Subscription Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Email Notification?": {
+      "main": [
+        [
+          {
+            "node": "Extract Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Email Data": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success Response": {
+      "main": [
+        []
+      ]
+    },
+    "Send email": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "339fead5-a799-4835-aec1-b49a3a878fa1",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-07-02T08:06:12.532Z",
+      "updatedAt": "2025-07-02T08:06:12.532Z",
+      "role": "workflow:owner",
+      "workflowId": "cplr7F8xgOQ0lwpa",
+      "projectId": "HhHt4iOvpT5M8WV4",
+      "project": {
+        "createdAt": "2025-07-02T07:41:39.283Z",
+        "updatedAt": "2025-07-02T07:44:21.742Z",
+        "id": "HhHt4iOvpT5M8WV4",
+        "name": "Paul Bonneville <paul@paulbonneville.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "projectRelations": [
+          {
+            "createdAt": "2025-07-02T07:41:39.283Z",
+            "updatedAt": "2025-07-02T07:41:39.283Z",
+            "role": "project:personalOwner",
+            "userId": "2a4c66da-2bc5-4637-9d75-06c85ccb6b1c",
+            "projectId": "HhHt4iOvpT5M8WV4",
+            "user": {
+              "createdAt": "2025-07-02T07:41:37.012Z",
+              "updatedAt": "2025-07-02T22:10:02.186Z",
+              "id": "2a4c66da-2bc5-4637-9d75-06c85ccb6b1c",
+              "email": "paul@paulbonneville.com",
+              "firstName": "Paul",
+              "lastName": "Bonneville",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-07-02T07:44:34.404Z",
+                "personalization_survey_n8n_version": "1.98.1",
+                "companyType": "personal",
+                "reportedSource": "youtube"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "cplr7F8xgOQ0lwpa",
+                "userActivatedAt": 1751482433933,
+                "easyAIWorkflowOnboarded": true
+              },
+              "role": "global:owner",
+              "disabled": false,
+              "mfaEnabled": false,
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": []
+}
