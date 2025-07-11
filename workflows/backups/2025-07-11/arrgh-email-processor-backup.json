@@ -1,0 +1,337 @@
+{
+  "createdAt": "2025-07-02T08:06:12.532Z",
+  "updatedAt": "2025-07-09T19:46:50.561Z",
+  "id": "cplr7F8xgOQ0lwpa",
+  "name": "Arrgh Email Processor",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inbound-email",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "23984477-973e-4060-84ea-082617395dee",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -440,
+        100
+      ],
+      "typeVersion": 1,
+      "webhookId": "d93ddc03-b042-4df4-8ef2-bbe8b480dbf1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.headers['x-amz-sns-message-type'] }}",
+              "value2": "SubscriptionConfirmation"
+            }
+          ]
+        }
+      },
+      "id": "1b9419e0-37e0-4271-af5d-adf89facd230",
+      "name": "Is Subscription Confirmation?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -220,
+        100
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.parseJson().SubscribeURL}}",
+        "options": {}
+      },
+      "id": "04221f1d-8a6e-4a39-be5b-874132ed9b39",
+      "name": "Confirm Subscription",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.parseJson().Type}}",
+              "value2": "Notification"
+            }
+          ]
+        }
+      },
+      "id": "de77b66d-f6d7-4de9-bf3d-5a11323447a7",
+      "name": "Is Email Notification?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        0,
+        200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=Email processed successfully: \n{{ $json.output }}",
+        "options": {}
+      },
+      "id": "7d138cd6-b5c3-4462-941b-9e499735a948",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        840,
+        200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Subscription confirmed",
+        "options": {}
+      },
+      "id": "ddafa2d9-79aa-4d31-bfef-90dee2cdad25",
+      "name": "Subscription Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        220,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "fromEmail": "paul@paulbonneville.com",
+        "toEmail": "test@arrgh.paulbonneville.com",
+        "subject": "HTML Test Email - Entity Extraction Test",
+        "html": "<html><body><h1>Business Meeting Invitation</h1><p>Dear Team,</p><p><strong>John Smith</strong> from <em>Acme Corporation</em> has invited us to attend the <strong>Annual Tech Summit 2025</strong> in <a href=\"https://example.com\">San Francisco, California</a> on March 15-17, 2025.</p><ul><li>Event: Annual Tech Summit 2025</li><li>Organizer: Acme Corporation</li><li>Location: Moscone Center, San Francisco</li><li>Attendees: John Smith (CEO), Sarah Johnson (CTO)</li></ul><h3>Products to be Showcased</h3><p>They will be demonstrating their new <code>CloudSync Pro</code> software and the <strong>DataVault 3000</strong> hardware solution.</p><h3>Meeting Details</h3><blockquote>Please confirm attendance for the product demonstration at the Google Inc headquarters in Mountain View.</blockquote><p>Best regards,<br><strong>Alice Cooper</strong><br>Microsoft Corporation<br>Event Coordinator</p></body></html>",
+        "options": {}
+      },
+      "id": "db5287b1-fdc4-4b13-aa47-418a61010c9d",
+      "name": "Send email to test workflow",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [
+        -440,
+        -120
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "smtp": {
+          "id": "sC34ufIj3qJLoA95",
+          "name": "AWS SES SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "arrgh@paulbonneville.com",
+        "toEmail": "paul@paulbonneville.com",
+        "subject": "Arrgh! Email newsletter was parsed",
+        "html": "=<h3>Newsletter successfully processed by Arrgh!</h3>\n\n<p><strong>{{ $json.subject }}</strong><br>\nFrom: {{ $json.sender }}</p>\n\n<h4>Entities Extracted:</h4>\n<ul>\n<li><strong>Organizations:</strong> {{ $json.entities_new }}</li>\n<li><strong>People:</strong> {{ $json.entities_updated }}</li>\n<li><strong>Total Entities:</strong> {{ $json.entities_extracted }}</li>\n</ul>\n\n<p><strong>Processing Status:</strong> {{ $json.status }}</p>\n<p><strong>Message:</strong> {{ $json.message }}</p>\n<p><strong>Newsletter ID:</strong> {{ $json.newsletter_id }}</p>\n<p><strong>Processing Time:</strong> {{ $json.processing_time }}s</p>",
+        "options": {}
+      },
+      "id": "c6e363b0-a89e-4ab5-9373-f76cb8ced8a3",
+      "name": "Send email",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [
+        640,
+        200
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "smtp": {
+          "id": "sC34ufIj3qJLoA95",
+          "name": "AWS SES SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://arrgh-fastapi-860937201650.us-central1.run.app/newsletter/process",
+        "options": {
+          "bodyContentType": "json"
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "html_content",
+              "value": "={{ $json.content.body }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.content.headers.Subject }}"
+            },
+            {
+              "name": "=sender",
+              "value": "={{ $json.content.headers.From }}"
+            }
+          ]
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "X-API-Key",
+              "value": "YOUR_API_KEY_HERE"
+            }
+          ]
+        }
+      },
+      "id": "649ce2d0-bd92-43c1-bd0b099309a1",
+      "name": "Call Newsletter API",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        440,
+        200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import json\nimport re\n\ndef parse_json_strings(obj):\n    \"\"\"Recursively parse JSON strings in nested objects\"\"\"\n    if isinstance(obj, dict):\n        result = {}\n        for key, value in obj.items():\n            result[key] = parse_json_strings(value)\n        return result\n    elif isinstance(obj, list):\n        return [parse_json_strings(item) for item in obj]\n    elif isinstance(obj, str):\n        # Try to parse as JSON if it looks like JSON\n        stripped = obj.strip()\n        if (stripped.startswith('{') and stripped.endswith('}')) or \\\n           (stripped.startswith('[') and stripped.endswith(']')):\n            try:\n                parsed = json.loads(obj)\n                return parse_json_strings(parsed)  # Recursively parse nested JSON\n            except (json.JSONDecodeError, ValueError):\n                pass\n        return obj\n    else:\n        return obj\n\ndef parse_email_content(raw_content):\n    \"\"\"Custom email parser that works in n8n environment\"\"\"\n    if not isinstance(raw_content, str):\n        return raw_content\n    \n    try:\n        # Split headers and body (empty line separates them)\n        parts = raw_content.split('\\n\\n', 1)\n        if len(parts) != 2:\n            # Try with \\r\\n\\r\\n\n            parts = raw_content.split('\\r\\n\\r\\n', 1)\n        \n        if len(parts) == 2:\n            headers_text, body = parts\n        else:\n            # If no clear separation, treat everything as headers\n            headers_text = raw_content\n            body = \"\"\n        \n        # Parse headers\n        headers = {}\n        current_header = None\n        current_value = \"\"\n        \n        for line in headers_text.split('\\n'):\n            line = line.rstrip('\\r')\n            \n            # Check if this is a continuation line (starts with space or tab)\n            if line.startswith((' ', '\\t')) and current_header:\n                current_value += ' ' + line.strip()\n            else:\n                # Save previous header if exists\n                if current_header:\n                    headers[current_header] = current_value.strip()\n                \n                # Parse new header\n                if ':' in line:\n                    header_name, header_value = line.split(':', 1)\n                    current_header = header_name.strip()\n                    current_value = header_value.strip()\n                else:\n                    current_header = None\n        \n        # Don't forget the last header\n        if current_header:\n            headers[current_header] = current_value.strip()\n        \n        # Clean up the body (remove quoted-printable encoding artifacts)\n        clean_body = body.replace('=\\n', '').replace('=\\r\\n', '')\n        \n        # Decode some common quoted-printable sequences\n        clean_body = clean_body.replace('=3D', '=')\n        clean_body = clean_body.replace('=20', ' ')\n        \n        # Determine content type\n        content_type = headers.get('Content-Type', '').split(';')[0].strip()\n        if not content_type:\n            content_type = 'text/plain'\n        \n        return {\n            \"headers\": headers,\n            \"body\": clean_body,\n            \"content_type\": content_type,\n            \"is_multipart\": 'multipart' in content_type.lower()\n        }\n        \n    except Exception as e:\n        print(f\"Email parsing failed: {e}\")\n        return raw_content\n\n# Get the input data from webhook - n8n Python node uses 'items' variable\njson_data = items[0].json\nprint('Input data:', json_data)\n\n# Parse the SNS message from the webhook\nsns_message = None\nif 'body' in json_data:\n    # If body is a string, parse it\n    if isinstance(json_data['body'], str):\n        sns_body = json.loads(json_data['body'])\n        sns_message = json.loads(sns_body['Message'])\n    else:\n        # If body is already an object\n        sns_message = json.loads(json_data['body']['Message'])\nelif 'Message' in json_data:\n    # Direct Message field\n    sns_message = json.loads(json_data['Message'])\nelse:\n    raise Exception('Could not find SNS Message in input data')\n\n# Recursively parse any JSON strings within the message\nsns_message = parse_json_strings(sns_message)\n\n# Parse the email content if it exists\nif 'content' in sns_message:\n    sns_message['content'] = parse_email_content(sns_message['content'])\n\n# Add S3 information to the message object\nsns_message['s3Bucket'] = 'n8n-inbound-emails-production'\nsns_message['s3ObjectKey'] = 'emails/' + sns_message['mail']['messageId']\n\nprint(f\"Extracted complete message object with S3 info:\")\nprint(f\"  Message ID: {sns_message['mail']['messageId']}\")\nprint(f\"  S3 Location: s3://{sns_message['s3Bucket']}/{sns_message['s3ObjectKey']}\")\n\n# Return the entire message object as structured Python objects\nreturn [{\"json\": sns_message}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        200
+      ],
+      "id": "7e7011d2-952b-42a6-a42c-b91f434b7e82",
+      "name": "Extract Data from Email"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Subscription Confirmation?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Subscription Confirmation?": {
+      "main": [
+        [
+          {
+            "node": "Confirm Subscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Email Notification?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Subscription": {
+      "main": [
+        [
+          {
+            "node": "Subscription Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Email Notification?": {
+      "main": [
+        [
+          {
+            "node": "Extract Data from Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Newsletter API": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Data from Email": {
+      "main": [
+        [
+          {
+            "node": "Call Newsletter API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.paulbonneville.com",
+            "x-amz-sns-message-type": "Notification",
+            "x-amz-sns-message-id": "afc33ab0-b007-5b8c-83a5-5a56ba4f7ee9",
+            "x-amz-sns-topic-arn": "arn:aws:sns:us-west-2:944355535974:n8n-email-notifications-production",
+            "x-amz-sns-subscription-arn": "arn:aws:sns:us-west-2:944355535974:n8n-email-notifications-production:4cd8f1bb-679f-4e5f-ad48-3d7d6ab5e624",
+            "content-type": "text/plain; charset=UTF-8",
+            "content-length": "9740",
+            "user-agent": "Amazon Simple Notification Service Agent",
+            "x-cloud-trace-context": "48921c48b1cdd6fb21d43685aa9790ef/9375858131074029854",
+            "x-forwarded-proto": "https",
+            "traceparent": "00-48921c48b1cdd6fb21d43685aa9790ef-821dbd4b7720191e-00",
+            "x-forwarded-for": "15.221.164.54",
+            "forwarded": "for=\"15.221.164.54\";proto=https",
+            "accept-encoding": "gzip,deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": "{\n  \"Type\" : \"Notification\",\n  \"MessageId\" : \"afc33ab0-b007-5b8c-83a5-5a56ba4f7ee9\",\n  \"TopicArn\" : \"arn:aws:sns:us-west-2:944355535974:n8n-email-notifications-production\",\n  \"Subject\" : \"Amazon SES Email Receipt Notification\",\n  \"Message\" : \"{\\\"notificationType\\\":\\\"Received\\\",\\\"mail\\\":{\\\"timestamp\\\":\\\"2025-07-07T17:46:48.563Z\\\",\\\"source\\\":\\\"01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@amazonses.com\\\",\\\"messageId\\\":\\\"krf42ms56p7ljpfllelevnccjludffc9v375qoo1\\\",\\\"destination\\\":[\\\"test@arrgh.paulbonneville.com\\\"],\\\"headersTruncated\\\":false,\\\"headers\\\":[{\\\"name\\\":\\\"Return-Path\\\",\\\"value\\\":\\\"<01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@amazonses.com>\\\"},{\\\"name\\\":\\\"Received\\\",\\\"value\\\":\\\"from a48-25.smtp-out.amazonses.com (a48-25.smtp-out.amazonses.com [54.240.48.25]) by inbound-smtp.us-west-2.amazonaws.com with SMTP id krf42ms56p7ljpfllelevnccjludffc9v375qoo1 for test@arrgh.paulbonneville.com; Mon, 07 Jul 2025 17:46:48 +0000 (UTC)\\\"},{\\\"name\\\":\\\"X-SES-Spam-Verdict\\\",\\\"value\\\":\\\"PASS\\\"},{\\\"name\\\":\\\"X-SES-Virus-Verdict\\\",\\\"value\\\":\\\"PASS\\\"},{\\\"name\\\":\\\"Received-SPF\\\",\\\"value\\\":\\\"pass (spfCheck: domain of amazonses.com designates 54.240.48.25 as permitted sender) client-ip=54.240.48.25; envelope-from=01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@amazonses.com; helo=a48-25.smtp-out.amazonses.com;\\\"},{\\\"name\\\":\\\"Authentication-Results\\\",\\\"value\\\":\\\"amazonses.com; spf=pass (spfCheck: domain of amazonses.com designates 54.240.48.25 as permitted sender) client-ip=54.240.48.25; envelope-from=01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@amazonses.com; helo=a48-25.smtp-out.amazonses.com; dkim=pass header.i=@amazonses.com; dmarc=none header.from=paulbonneville.com;\\\"},{\\\"name\\\":\\\"X-SES-RECEIPT\\\",\\\"value\\\":\\\"AEFBQUFBQUFBQUFHQXBvRHBZYUlJeGdxaWRBcUZ2bk5waHFEMjFrSEh0dzk2NGQrNUFVc2pyYU0vQlVUYmVMQmx3YmhVSUdzZVFzcWVOR0JTSVJFYUwweVFML3NyUUtmanNESzQ0NFJDbC9rMFdyN2tjcld6TW5va1BHcFViWmVhMnZlZkVFWWloOGphYys4V2pCYUxuc0k1NmVUUldVN3k0MlVCcElJSGhIdnA0bndNdHNsOFhDQ05WTCtzTVIyVldFaXR4QWtVZm14Y3NIbGkyNHUrUWRYNWhYcVNsRFJ3MzdFV2xjSDB6djA2S3RPNFRvS0QxZkVEQkRjRG1aYjNhak9ZVHdYK0dzK2IxMmhqSnZheDNaZnA0eDdZU0tVTVRCZC9Kd0ZiSlpaZ2RpQUY4TnJNZ0dBVVZITkVaNWVuRzhwbjB3SmF4TEU3NFQrMXpiZGFMTFNNbncwdXlZZG0zZFdtRG5mRDRoQzYwWTBqR3hiYnBRPT0=\\\"},{\\\"name\\\":\\\"X-SES-DKIM-SIGNATURE\\\",\\\"value\\\":\\\"a=rsa-sha256; q=dns/txt; b=h+ZmcWoO7J3ULFEe8dSnoSEYQl+1hjTPL6WN1KiUiv3GU5ZiYSw5mSY+IDyvfmw24DgtaC9gMojW+Pda4EdGXxs2ABOQ6LNKu5GEaoLdG12dY8Jvkv5dpwAXEYfpS8Hogi2ITc0XtqnakxzVlg864hGdhnCibZN626wR3ySndm4=; c=relaxed/simple; s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1751910408; v=1; bh=iJaLBZYQM0eOBUOKeYg6aZJ/sbYTOaf9d7RM3MWl7rY=; h=From:To:Cc:Bcc:Subject:Date:Message-ID:MIME-Version:Content-Type:X-SES-RECEIPT;\\\"},{\\\"name\\\":\\\"DKIM-Signature\\\",\\\"value\\\":\\\"v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple; s=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw; d=amazonses.com; t=1751910407; h=Content-Type:From:To:Subject:Message-ID:Content-Transfer-Encoding:Date:MIME-Version:Feedback-ID; bh=iJaLBZYQM0eOBUOKeYg6aZJ/sbYTOaf9d7RM3MWl7rY=; b=tRwqAmxuguhnLzeXgi14y7l+LWW3HsNGkIIAL6qjygrzxZyp87uZZO7p/vSdZuXalIwZvWfGgg/gYnAK5Enc0VVKTSOLS/EwxeVxtfmxZ30N0dmUpRfJAvw4ZNs/tVlV4QL2vv370WbIXqe4yGUEgD7EZLjDUcb0MB2x8uAINpA=\\\"},{\\\"name\\\":\\\"Content-Type\\\",\\\"value\\\":\\\"text/html; charset=utf-8\\\"},{\\\"name\\\":\\\"From\\\",\\\"value\\\":\\\"paul@paulbonneville.com\\\"},{\\\"name\\\":\\\"To\\\",\\\"value\\\":\\\"test@arrgh.paulbonneville.com\\\"},{\\\"name\\\":\\\"Subject\\\",\\\"value\\\":\\\"HTML Test Email - Entity Extraction Test\\\"},{\\\"name\\\":\\\"Message-ID\\\",\\\"value\\\":\\\"<01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@email.amazonses.com>\\\"},{\\\"name\\\":\\\"Content-Transfer-Encoding\\\",\\\"value\\\":\\\"quoted-printable\\\"},{\\\"name\\\":\\\"Date\\\",\\\"value\\\":\\\"Mon, 7 Jul 2025 17:46:47 +0000\\\"},{\\\"name\\\":\\\"MIME-Version\\\",\\\"value\\\":\\\"1.0\\\"},{\\\"name\\\":\\\"Feedback-ID\\\",\\\"value\\\":\\\"::1.us-east-1.4kzoU9RsxS/GE/nC73Qx7Getx37ZMSMIyn3RK8M9Ab0=:AmazonSES\\\"},{\\\"name\\\":\\\"X-SES-Outgoing\\\",\\\"value\\\":\\\"2025.07.07-54.240.48.25\\\"}],\\\"commonHeaders\\\":{\\\"returnPath\\\":\\\"01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@amazonses.com\\\",\\\"from\\\":[\\\"paul@paulbonneville.com\\\"],\\\"date\\\":\\\"Mon, 7 Jul 2025 17:46:47 +0000\\\",\\\"to\\\":[\\\"test@arrgh.paulbonneville.com\\\"],\\\"messageId\\\":\\\"<01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@email.amazonses.com>\\\",\\\"subject\\\":\\\"HTML Test Email - Entity Extraction Test\\\"}},\\\"receipt\\\":{\\\"timestamp\\\":\\\"2025-07-07T17:46:48.563Z\\\",\\\"processingTimeMillis\\\":384,\\\"recipients\\\":[\\\"test@arrgh.paulbonneville.com\\\"],\\\"spamVerdict\\\":{\\\"status\\\":\\\"PASS\\\"},\\\"virusVerdict\\\":{\\\"status\\\":\\\"PASS\\\"},\\\"spfVerdict\\\":{\\\"status\\\":\\\"PASS\\\"},\\\"dkimVerdict\\\":{\\\"status\\\":\\\"GRAY\\\"},\\\"dmarcVerdict\\\":{\\\"status\\\":\\\"GRAY\\\"},\\\"action\\\":{\\\"type\\\":\\\"SNS\\\",\\\"topicArn\\\":\\\"arn:aws:sns:us-west-2:944355535974:n8n-email-notifications-production\\\",\\\"encoding\\\":\\\"UTF8\\\"}},\\\"content\\\":\\\"Return-Path: <01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@amazonses.com>\\\\r\\\\nReceived: from a48-25.smtp-out.amazonses.com (a48-25.smtp-out.amazonses.com [54.240.48.25])\\\\r\\\\n by inbound-smtp.us-west-2.amazonaws.com with SMTP id krf42ms56p7ljpfllelevnccjludffc9v375qoo1\\\\r\\\\n for test@arrgh.paulbonneville.com;\\\\r\\\\n Mon, 07 Jul 2025 17:46:48 +0000 (UTC)\\\\r\\\\nX-SES-Spam-Verdict: PASS\\\\r\\\\nX-SES-Virus-Verdict: PASS\\\\r\\\\nReceived-SPF: pass (spfCheck: domain of amazonses.com designates 54.240.48.25 as permitted sender) client-ip=54.240.48.25; envelope-from=01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@amazonses.com; helo=a48-25.smtp-out.amazonses.com;\\\\r\\\\nAuthentication-Results: amazonses.com;\\\\r\\\\n spf=pass (spfCheck: domain of amazonses.com designates 54.240.48.25 as permitted sender) client-ip=54.240.48.25; envelope-from=01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@amazonses.com; helo=a48-25.smtp-out.amazonses.com;\\\\r\\\\n dkim=pass header.i=@amazonses.com;\\\\r\\\\n dmarc=none header.from=paulbonneville.com;\\\\r\\\\nX-SES-RECEIPT: AEFBQUFBQUFBQUFHQXBvRHBZYUlJeGdxaWRBcUZ2bk5waHFEMjFrSEh0dzk2NGQrNUFVc2pyYU0vQlVUYmVMQmx3YmhVSUdzZVFzcWVOR0JTSVJFYUwweVFML3NyUUtmanNESzQ0NFJDbC9rMFdyN2tjcld6TW5va1BHcFViWmVhMnZlZkVFWWloOGphYys4V2pCYUxuc0k1NmVUUldVN3k0MlVCcElJSGhIdnA0bndNdHNsOFhDQ05WTCtzTVIyVldFaXR4QWtVZm14Y3NIbGkyNHUrUWRYNWhYcVNsRFJ3MzdFV2xjSDB6djA2S3RPNFRvS0QxZkVEQkRjRG1aYjNhak9ZVHdYK0dzK2IxMmhqSnZheDNaZnA0eDdZU0tVTVRCZC9Kd0ZiSlpaZ2RpQUY4TnJNZ0dBVVZITkVaNWVuRzhwbjB3SmF4TEU3NFQrMXpiZGFMTFNNbncwdXlZZG0zZFdtRG5mRDRoQzYwWTBqR3hiYnBRPT0=\\\\r\\\\nX-SES-DKIM-SIGNATURE: a=rsa-sha256; q=dns/txt; b=h+ZmcWoO7J3ULFEe8dSnoSEYQl+1hjTPL6WN1KiUiv3GU5ZiYSw5mSY+IDyvfmw24DgtaC9gMojW+Pda4EdGXxs2ABOQ6LNKu5GEaoLdG12dY8Jvkv5dpwAXEYfpS8Hogi2ITc0XtqnakxzVlg864hGdhnCibZN626wR3ySndm4=; c=relaxed/simple; s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1751910408; v=1; bh=iJaLBZYQM0eOBUOKeYg6aZJ/sbYTOaf9d7RM3MWl7rY=; h=From:To:Cc:Bcc:Subject:Date:Message-ID:MIME-Version:Content-Type:X-SES-RECEIPT;\\\\r\\\\nDKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;\\\\r\\\\n\\\\ts=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw; d=amazonses.com; t=1751910407;\\\\r\\\\n\\\\th=Content-Type:From:To:Subject:Message-ID:Content-Transfer-Encoding:Date:MIME-Version:Feedback-ID;\\\\r\\\\n\\\\tbh=iJaLBZYQM0eOBUOKeYg6aZJ/sbYTOaf9d7RM3MWl7rY=;\\\\r\\\\n\\\\tb=tRwqAmxuguhnLzeXgi14y7l+LWW3HsNGkIIAL6qjygrzxZyp87uZZO7p/vSdZuXa\\\\r\\\\n\\\\tlIwZvWfGgg/gYnAK5Enc0VVKTSOLS/EwxeVxtfmxZ30N0dmUpRfJAvw4ZNs/tVlV4QL\\\\r\\\\n\\\\t2vv370WbIXqe4yGUEgD7EZLjDUcb0MB2x8uAINpA=\\\\r\\\\nContent-Type: text/html; charset=utf-8\\\\r\\\\nFrom: paul@paulbonneville.com\\\\r\\\\nTo: test@arrgh.paulbonneville.com\\\\r\\\\nSubject: HTML Test Email - Entity Extraction Test\\\\r\\\\nMessage-ID: <01000197e5ff5db7-c77d55db-2b56-49be-99e7-b37aa0a5b0f8-000000@email.amazonses.com>\\\\r\\\\nContent-Transfer-Encoding: quoted-printable\\\\r\\\\nDate: Mon, 7 Jul 2025 17:46:47 +0000\\\\r\\\\nMIME-Version: 1.0\\\\r\\\\nFeedback-ID: ::1.us-east-1.4kzoU9RsxS/GE/nC73Qx7Getx37ZMSMIyn3RK8M9Ab0=:AmazonSES\\\\r\\\\nX-SES-Outgoing: 2025.07.07-54.240.48.25\\\\r\\\\n\\\\r\\\\n<html><body><h1>Business Meeting Invitation</h1><p>Dear Team,=\\\\r\\\\n</p><p><strong>John Smith</strong> from <em>Acme Corporation</em> has =\\\\r\\\\ninvited us to attend the <strong>Annual Tech Summit 2025</strong> in <a =\\\\r\\\\nhref=3D\\\\\\\"https://example.com\\\\\\\">San Francisco, California</a> on March 15-17, =\\\\r\\\\n2025.</p><ul><li>Event: Annual Tech Summit 2025</li><li>Organizer: Acme =\\\\r\\\\nCorporation</li><li>Location: Moscone Center, San Francisco</li><li>Attende=\\\\r\\\\nes: John Smith (CEO), Sarah Johnson (CTO)</li></ul><h3>Products to be =\\\\r\\\\nShowcased</h3><p>They will be demonstrating their new <code>CloudSync =\\\\r\\\\nPro</code> software and the <strong>DataVault 3000</strong> hardware =\\\\r\\\\nsolution.</p><h3>Meeting Details</h3><blockquote>Please confirm attendance =\\\\r\\\\nfor the product demonstration at the Google Inc headquarters in Mountain =\\\\r\\\\nView.</blockquote><p>Best regards,<br><strong>Alice =\\\\r\\\\nCooper</strong><br>Microsoft Corporation<br>Event Coordinator</p></body></h=\\\\r\\\\ntml>\\\\r\\\\n\\\"}\",\n  \"Timestamp\" : \"2025-07-07T17:46:48.968Z\",\n  \"SignatureVersion\" : \"1\",\n  \"Signature\" : \"Kf62dpTFICvY75DsMnFy/b+TPBMAWFBvnIByJWXjRdmPgC+Xh35BRLh7C/E3ATjPkbRswY9rLzZuyFQ9YwsMUoQ6FIZoZDt59Ee7BHUM1kMixmXWPrwURE0gFB8OcYiMDsfstFbja8H/CavMsXPeFNDMhnCD1oqolKuSZQBQT7D6uD5uQAmyFTB/FCiP0seVpex1iFoI44sUv2pNQxXOkxDQXXpU6OWScD3BH+COqfI9HH5eXXpCiW32HpCB20n3ZHl7dCK4ISYVWJEJF0YJZdDpARgSJ0wVkSJIJRYPN8qpJNYHYPhlipE0I7q9EbYfS8J1UuqeFxhd2DYsrneAcw==\",\n  \"SigningCertURL\" : \"https://sns.us-west-2.amazonaws.com/SimpleNotificationService-9c6465fa7f48f5cacd23014631ec1136.pem\",\n  \"UnsubscribeURL\" : \"https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-west-2:944355535974:n8n-email-notifications-production:4cd8f1bb-679f-4e5f-ad48-3d7d6ab5e624\"\n}",
+          "webhookUrl": "https://0.0.0.0:8080/webhook/inbound-email",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "versionId": "dc68b943-a128-4aa2-88d4-2d9f0771812c",
+  "triggerCount": 1,
+  "tags": []
+}
