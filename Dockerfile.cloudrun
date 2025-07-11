@@ -14,7 +14,7 @@ RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
 RUN mkdir -p /scripts && chown -R node:node /scripts
 
 # Copy startup script
-COPY cloud-run-startup.sh /scripts/startup.sh
+COPY scripts/cloud-run-startup.sh /scripts/startup.sh
 RUN chmod +x /scripts/startup.sh && chown node:node /scripts/startup.sh
 
 # Switch back to node user
