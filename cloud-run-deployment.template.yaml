@@ -9,14 +9,14 @@ spec:
   template:
     metadata:
       annotations:
-        # Minimum instances to reduce cold starts
-        autoscaling.knative.dev/minScale: "1"
+        # Minimum instances (0 = scale to zero for cost optimization)
+        autoscaling.knative.dev/minScale: "0"
         # Maximum instances
         autoscaling.knative.dev/maxScale: "10"
         # VPC connector removed - using public IP Cloud SQL
-        # Resource limits
-        run.googleapis.com/memory: "2Gi"
-        run.googleapis.com/cpu: "2"
+        # Resource limits (POC optimized)
+        run.googleapis.com/memory: "512Mi"
+        run.googleapis.com/cpu: "0.5"
         # CPU allocation during request processing
         run.googleapis.com/cpu-throttling: "false"
         # Timeout for requests (n8n workflows can take time)
@@ -148,14 +148,14 @@ spec:
               name: aws-secret-access-key
               key: latest
         
-        # Resource requests
+        # Resource requests (POC optimized)
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "1"
+            memory: "256Mi"
+            cpu: "0.25"
           limits:
-            memory: "2Gi"
-            cpu: "2"
+            memory: "512Mi"
+            cpu: "0.5"
         
         # Liveness probe - uses n8n's web interface as health check
         livenessProbe:
